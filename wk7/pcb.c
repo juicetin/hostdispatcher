@@ -131,7 +131,7 @@ PcbPtr printPcb(PcbPtr p, FILE * iostream) {
  *    void
  ******************************************************/  
 void printPcbHdr(FILE * iostream) {  
-	fprintf(iostream, "#pcb info");
+//	fprintf(iostream, "#pcb info\n");
 	/* FILL IN THIS LINE WITH YOUR CODE */
 }
 

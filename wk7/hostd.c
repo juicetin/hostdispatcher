@@ -113,38 +113,26 @@ int main (int argc, char *argv[]) {
 			break;
 		}
 	}
-
 	//  3. Start dispatcher timer;
 	//     (already set to zero above)
-
 	//  4. While there's anything in the queue or there is a currently running process:
-
 	while (inputqueue != NULL || currentprocess != NULL) {
-
 		//      i. If a process is currently running;
-
-		if (currentprocess != NULL/* && currentprocess->status == 3*/) {
-
+		if (currentprocess != NULL && currentprocess->status == PCB_RUNNING) {
 			//          a. Decrement process remainingcputime;
-
 			currentprocess->remainingcputime--;
-
 			//          b. If times up:
-
-			if (currentprocess->remainingcputime == 0  ) {
+			if (currentprocess->remainingcputime < 0  ) {
 				//  A. Send SIGINT to the process to terminate it;
 				terminatePcb(currentprocess);
-
 				//  B. Free up process structure memory
 				free(currentprocess);
 				currentprocess = NULL;
 			}
 		}
-
 		//     ii. If no process now currently running &&
 		//           dispatcher queue is not empty &&
 		//           arrivaltime of process at head of queue is <= dispatcher timer:
-
 		if (currentprocess == NULL && inputqueue != NULL && inputqueue->arrivaltime <= timer) {
 			//  a. Dequeue process and start it (fork & exec)
 			currentprocess = deqPcb(&inputqueue); 
@@ -152,17 +140,11 @@ int main (int argc, char *argv[]) {
 			startPcb(currentprocess);
 			currentprocess->status = PCB_RUNNING;
 		}
-
 		//     iii. sleep for one second;
-
 		sleep(1);
-
 		//      iv. Increment dispatcher timer;
-
 		timer++;
-
 		//       v. Go back to 4.
-
 	}
 
 	//    5. Exit
