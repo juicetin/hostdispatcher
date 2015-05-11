@@ -68,7 +68,12 @@ int main (int argc, char *argv[]) {
 	char * inputfile;             // job dispatch file
 	FILE * inputliststream;
 	PcbPtr inputqueue = NULL;     // input queue buffer
-	PcbPtr rrqueue = NULL;
+	PcbPtr fbqueue0 = NULL, fbqueue1 = NULL, fbqueue2 = NULL;
+	PcbPtr fbqueue[3];
+	for (int i = 0; i < 3; ++i)
+	{
+		fbqueue[i] = NULL;
+	}
 	PcbPtr currentprocess = NULL; // current process
 	PcbPtr process = NULL;        // working pcb pointer
 	int timer = 0;                // dispatcher timer 
@@ -119,67 +124,86 @@ int main (int argc, char *argv[]) {
 	//  3. Start dispatcher timer;
 	//     (already set to zero above)
 
-	//  4. While there's anything in any of  the queues or there is a currently running process:
-	while (inputqueue != NULL || rrqueue != NULL || currentprocess != NULL)
+	//	4. While there's anything in any of the queues or there is a currenly running process
+	while (inputqueue != NULL || fbqueue[0] != NULL || fbqueue[1] != NULL || fbqueue[2] != NULL || currentprocess != NULL)
 	{
-		//	i. Unload any pending process from the input queue
-				//While (head-of-input-queue.arrival-time <= dispatch timer) dequeue process from input queue and enqueue on RR queue
-
-
+		//	i. Unload pending processes from the input queue
+			//	while (head of input queue.arrival-time <= dispatch timer)
+			//	dequeue process from input queue and enqueue on highest priority fbqueue (assigning it appropriate priority)
 		while (inputqueue != NULL && inputqueue->arrivaltime <= timer)
 		{
-			//process = deqPcb(&inputqueue);
-			rrqueue = enqPcb(rrqueue, deqPcb(&inputqueue));
+			int priority = inputqueue->priority;
+			fbqueue[priority-1] = enqPcb(fbqueue[priority-1], deqPcb(&inputqueue));
 		}
-
-		//	ii. If a process is currently running
+		//	ii. if a process is currently running
 		if (currentprocess != NULL && currentprocess->status == PCB_RUNNING)
 		{
-			//	a. Decrement process remainingcputime
+			// a. Decrement remainingcputime;
 			currentprocess->remainingcputime--;
-			//	b. If time's up
+			// b. if time's up
 			if (currentprocess->remainingcputime < 0)
 			{
-				//	A. Send SIGINT to the process to terminate it
+				// A. terminate process
 				terminatePcb(currentprocess);
-				//	B. Free up process structure memory
+				// B. free up process structure memory
 				free(currentprocess);
 				currentprocess = NULL;
 			}
-			//	c. else if other processes are waiting in RR queue
-			else if (rrqueue != NULL)
+			// c. else if other processes are waiting in any of the fbqueues
+			else if (fbqueue[0] != NULL || fbqueue[1] != NULL || fbqueue[2] != NULL)
 			{
-				//	A. Send SIGSTP to suspend it
+				// A. suspend process
 				suspendPcb(currentprocess);
-				//	B. Enqueue it back on RR queue
-				rrqueue = enqPcb(rrqueue, currentprocess);
+				// B. reduce priority of process (if possible) and enqueue it on appropriate fbqueue
+				if (currentprocess->priority <= 2)
+				{
+					currentprocess->priority = currentprocess->priority + 1;
+				}
+				int index = currentprocess->priority - 1;
+				fbqueue[index] = enqPcb(fbqueue[index], currentprocess);
 				currentprocess = NULL;
 			}
 		}
-
-		//	iii. If no process currently running && RR queue is not empty
-		if (currentprocess == NULL && rrqueue != NULL)
+		//	iii. If no process currently running && fbqueues are not all empty
+		if (currentprocess == NULL && (fbqueue[0] != NULL || fbqueue[1] != NULL || fbqueue[2] != NULL))
 		{
-			//	a. Dequeue process from RR queue
-			PcbPtr tmp = deqPcb(&rrqueue);
-			//	b. If already started but suspended, restart it (SIGCONT)
+			// a. Dequeue a process from the highest priority feedback queue that is not empty
+			int fb = -1;
+			for (int i = 0; i < 3; ++i)
+			{
+				if (fbqueue[i] != NULL)
+				{
+					fb = i;
+					break;
+				}
+			}
+			PcbPtr tmp = NULL;
+			if (fb != -1)
+			{
+				tmp = deqPcb(&fbqueue[fb]);	
+			}
+			// b. If already started but suspended, resume process
 			if (tmp->status == PCB_SUSPENDED)
 			{
-				resumePcb(currentprocess);
+				startPcb(tmp);
 			}
-			// else start it (fork & exec)
+			// else start process
 			else
 			{
-				//	c. set it as currently running process
+			// c. Set it as currently running process
 				currentprocess = startPcb(tmp);
 			}
-		}    
-		//	iv. sleep for 1 second
+
+		}
+
+		// iv. sleep for one second
 		sleep(1);
-		//	v. increment dispatch timer
+
+		// v. increment dispatch timer
 		timer++;
-		//	vi. go back to 4
+		// vi. go back to 4
 	}
+
 	//	5. Exit
 	exit (0);
 }

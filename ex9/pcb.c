@@ -96,8 +96,11 @@ PcbPtr startPcb (PcbPtr p) {
  ******************************************************/
 PcbPtr suspendPcb(PcbPtr p) {
 	/* FILL IN THIS BLOCK WITH YOUR CODE */
-	kill(p->pid, SIGSTOP);
-	return p;
+	if (kill(p->pid, SIGSTOP) == 0)
+	{
+		return p;
+	}
+	return NULL;
 }
 
 PcbPtr resumePcb(PcbPtr p) {
@@ -114,8 +117,11 @@ PcbPtr resumePcb(PcbPtr p) {
  ******************************************************/
 PcbPtr terminatePcb(PcbPtr p) {
 	/* FILL IN THIS BLOCK WITH YOUR CODE */
-	kill(p->pid, SIGKILL);
-	return p;
+	if (kill(p->pid, SIGKILL) == 0)
+	{
+		return p;
+	}
+	return NULL;
 }  
 
 /*******************************************************
@@ -126,19 +132,15 @@ PcbPtr terminatePcb(PcbPtr p) {
  ******************************************************/
 PcbPtr printPcb(PcbPtr p, FILE * iostream) {
 	/* FILL IN THIS BLOCK WITH YOUR CODE */
-	fprintf(iostream, "arrivaltime: %d\n", p->arrivaltime);
-	fprintf(iostream, "priority: %d\n", p->priority);
-	fprintf(iostream, "remainingcputime: %d\n", p->remainingcputime);
-	fprintf(iostream, "mbytes: %d\n", p->mbytes);
-	fprintf(iostream, "status: %d\n", p->status);
-    //char * args[MAXARGS];
-    //int arrivaltime;
-    //int priority;
-    //int remainingcputime;
-    //int mbytes;
-//  //  MabPtr memoryblock;
-    //Rsrc req;
-    //int status;
+//	fprintf(iostream, "arrivaltime: %d\n", p->arrivaltime);
+//	fprintf(iostream, "priority: %d\n", p->priority);
+//	fprintf(iostream, "remainingcputime: %d\n", p->remainingcputime);
+//	fprintf(iostream, "mbytes: %d\n", p->mbytes);
+//	fprintf(iostream, "status: %d\n", p->status);
+
+	fprintf(iostream, "%-12d\t%-8d\t%-18d\t%-6d\t%-6d\n", 
+		p->arrivaltime, p->priority, p->remainingcputime,
+		p->mbytes, p->status);
 	return p;
 }
 
@@ -148,7 +150,7 @@ PcbPtr printPcb(PcbPtr p, FILE * iostream) {
  *    void
  ******************************************************/  
 void printPcbHdr(FILE * iostream) {  
-	fprintf(iostream, "#pcb info\n");
+	fprintf(iostream, "arrivaltime	priority	remainingcputime	mbytes	status\n");
 	/* FILL IN THIS LINE WITH YOUR CODE */
 }
 

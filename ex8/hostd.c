@@ -161,18 +161,21 @@ int main (int argc, char *argv[]) {
 		if (currentprocess == NULL && rrqueue != NULL)
 		{
 			//	a. Dequeue process from RR queue
-			PcbPtr tmp = deqPcb(&rrqueue);
+			//PcbPtr tmp = deqPcb(&rrqueue);
+			currentprocess = deqPcb(&rrqueue);
 			//	b. If already started but suspended, restart it (SIGCONT)
-			if (tmp->status == PCB_SUSPENDED)
+			if (currentprocess->status == PCB_SUSPENDED)
 			{
-				resumePcb(currentprocess);
+				startPcb(currentprocess);
 			}
 			// else start it (fork & exec)
 			else
 			{
 				//	c. set it as currently running process
-				currentprocess = startPcb(tmp);
+				//currentprocess = startPcb(tmp);
+				startPcb(currentprocess);
 			}
+			//currentprocess = tmp;
 		}    
 		//	iv. sleep for 1 second
 		sleep(1);
