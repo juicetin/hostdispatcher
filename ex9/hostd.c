@@ -140,7 +140,7 @@ int main (int argc, char *argv[]) {
 			// a. Decrement remainingcputime;
 			currentprocess->remainingcputime--;
 			// b. if time's up
-			if (currentprocess->remainingcputime < 0)
+			if (currentprocess->remainingcputime == 0)
 			{
 				// A. terminate process
 				terminatePcb(currentprocess);
