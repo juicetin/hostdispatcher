@@ -68,7 +68,6 @@ int main (int argc, char *argv[]) {
 	char * inputfile;             // job dispatch file
 	FILE * inputliststream;
 	PcbPtr inputqueue = NULL;     // input queue buffer
-	PcbPtr fbqueue0 = NULL, fbqueue1 = NULL, fbqueue2 = NULL;
 	PcbPtr fbqueue[3];
 	for (int i = 0; i < 3; ++i)
 	{
@@ -180,20 +179,13 @@ int main (int argc, char *argv[]) {
 			PcbPtr tmp = NULL;
 			if (fb != -1)
 			{
-				tmp = deqPcb(&fbqueue[fb]);	
+				currentprocess = deqPcb(&fbqueue[fb]);	
 			}
 			// b. If already started but suspended, resume process
-			if (tmp->status == PCB_SUSPENDED)
-			{
-				startPcb(tmp);
-			}
 			// else start process
-			else
-			{
 			// c. Set it as currently running process
-				currentprocess = startPcb(tmp);
-			}
-
+			startPcb(currentprocess);
+			currentprocess->status = PCB_RUNNING;
 		}
 
 		// iv. sleep for one second

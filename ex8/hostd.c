@@ -164,18 +164,20 @@ int main (int argc, char *argv[]) {
 			//PcbPtr tmp = deqPcb(&rrqueue);
 			currentprocess = deqPcb(&rrqueue);
 			//	b. If already started but suspended, restart it (SIGCONT)
-			if (currentprocess->status == PCB_SUSPENDED)
-			{
-				startPcb(currentprocess);
-			}
-			// else start it (fork & exec)
-			else
-			{
-				//	c. set it as currently running process
-				//currentprocess = startPcb(tmp);
-				startPcb(currentprocess);
-			}
-			//currentprocess = tmp;
+			//if (currentprocess->status == PCB_SUSPENDED)
+			//{
+			//	startPcb(currentprocess);
+			//}
+			//// else start it (fork & exec)
+			//else
+			//{
+			//	//	c. set it as currently running process
+			//	//currentprocess = startPcb(tmp);
+			//	startPcb(currentprocess);
+			//}
+			////currentprocess = tmp;
+			currentprocess = startPcb(currentprocess);
+			currentprocess->status = PCB_RUNNING;
 		}    
 		//	iv. sleep for 1 second
 		sleep(1);
