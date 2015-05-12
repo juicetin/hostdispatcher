@@ -96,10 +96,12 @@ PcbPtr startPcb (PcbPtr p) {
  ******************************************************/
 PcbPtr suspendPcb(PcbPtr p) {
 	/* FILL IN THIS BLOCK WITH YOUR CODE */
-	if (kill(p->pid, SIGSTOP) == 0)
+	if (kill(p->pid, SIGTSTP) == 0)
 	{
+		waitpid(p->pid, NULL, WUNTRACED);
 		return p;
 	}
+
 	return NULL;
 }
 
@@ -117,10 +119,12 @@ PcbPtr resumePcb(PcbPtr p) {
  ******************************************************/
 PcbPtr terminatePcb(PcbPtr p) {
 	/* FILL IN THIS BLOCK WITH YOUR CODE */
-	if (kill(p->pid, SIGKILL) == 0)
+	if (kill(p->pid, SIGINT) == 0)
 	{
+		waitpid(p->pid, NULL, WUNTRACED);
 		return p;
 	}
+
 	return NULL;
 }  
 
@@ -132,15 +136,15 @@ PcbPtr terminatePcb(PcbPtr p) {
  ******************************************************/
 PcbPtr printPcb(PcbPtr p, FILE * iostream) {
 	/* FILL IN THIS BLOCK WITH YOUR CODE */
-//	fprintf(iostream, "arrivaltime: %d\n", p->arrivaltime);
-//	fprintf(iostream, "priority: %d\n", p->priority);
-//	fprintf(iostream, "remainingcputime: %d\n", p->remainingcputime);
-//	fprintf(iostream, "mbytes: %d\n", p->mbytes);
-//	fprintf(iostream, "status: %d\n", p->status);
+	//	fprintf(iostream, "arrivaltime: %d\n", p->arrivaltime);
+	//	fprintf(iostream, "priority: %d\n", p->priority);
+	//	fprintf(iostream, "remainingcputime: %d\n", p->remainingcputime);
+	//	fprintf(iostream, "mbytes: %d\n", p->mbytes);
+	//	fprintf(iostream, "status: %d\n", p->status);
 
 	fprintf(iostream, "%-12d\t%-8d\t%-18d\t%-6d\t%-6d\n", 
-		p->arrivaltime, p->priority, p->remainingcputime,
-		p->mbytes, p->status);
+			p->arrivaltime, p->priority, p->remainingcputime,
+			p->mbytes, p->status);
 	return p;
 }
 
