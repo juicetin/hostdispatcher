@@ -81,7 +81,7 @@ PcbPtr startPcb (PcbPtr p) {
 
 	}
 	else { // already started & suspended so continue
-		kill (p->pid, SIGCONT);
+		kill (p->pid, SIGCNT);
 	}    
 	p->status = PCB_RUNNING;
 	return p; 

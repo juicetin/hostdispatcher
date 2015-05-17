@@ -124,18 +124,18 @@ int main (int argc, char *argv[]) {
 	//     (already set to zero above)
 
 	//	4. While there's anything in any of the queues or there is a currenly running process
-	while (inputqueue != NULL || fbqueue[0] != NULL || fbqueue[1] != NULL || fbqueue[2] != NULL || currentprocess != NULL)
+	while (inputqueue || fbqueue[0] || fbqueue[1] || fbqueue[2] || currentprocess)
 	{
 		//	i. Unload pending processes from the input queue
 			//	while (head of input queue.arrival-time <= dispatch timer)
 			//	dequeue process from input queue and enqueue on highest priority fbqueue (assigning it appropriate priority)
-		while (inputqueue != NULL && inputqueue->arrivaltime <= timer)
+		while (inputqueue && inputqueue->arrivaltime <= timer)
 		{
 			int priority = inputqueue->priority;
 			fbqueue[priority-1] = enqPcb(fbqueue[priority-1], deqPcb(&inputqueue));
 		}
 		//	ii. if a process is currently running
-		if (currentprocess != NULL && currentprocess->status == PCB_RUNNING)
+		if (currentprocess && currentprocess->status == PCB_RUNNING)
 		{
 			// a. Decrement remainingcputime;
 			currentprocess->remainingcputime--;
@@ -149,7 +149,7 @@ int main (int argc, char *argv[]) {
 				currentprocess = NULL;
 			}
 			// c. else if other processes are waiting in any of the fbqueues
-			else if (fbqueue[0] != NULL || fbqueue[1] != NULL || fbqueue[2] != NULL)
+			else if (fbqueue[0] || fbqueue[1] || fbqueue[2])
 			{
 				// A. suspend process
 				suspendPcb(currentprocess);
@@ -164,13 +164,13 @@ int main (int argc, char *argv[]) {
 			}
 		}
 		//	iii. If no process currently running && fbqueues are not all empty
-		if (currentprocess == NULL && (fbqueue[0] != NULL || fbqueue[1] != NULL || fbqueue[2] != NULL))
+		if (!currentprocess && (fbqueue[0] || fbqueue[1] || fbqueue[2]))
 		{
 			// a. Dequeue a process from the highest priority feedback queue that is not empty
 			int fb = -1;
 			for (int i = 0; i < 3; ++i)
 			{
-				if (fbqueue[i] != NULL)
+				if (fbqueue[i])
 				{
 					fb = i;
 					break;
