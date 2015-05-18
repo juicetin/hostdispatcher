@@ -23,7 +23,6 @@ author:  Dr Ian G Graham, ian.graham@griffith.edu.au
 #include <unistd.h>
 
 #include "pcb.h"
-#include "mab.h"
 
 #ifndef FALSE
 #define FALSE 0

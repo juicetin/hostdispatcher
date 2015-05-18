@@ -26,7 +26,7 @@
  *******************************************************************/
 
 
-//#include "mab.h"
+#include "mab.h"
 //#include "rsrc.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +34,7 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h> 
+
 
 #ifndef FALSE
 #define FALSE 0
@@ -81,6 +82,7 @@ struct pcb {
 //    MabPtr memoryblock;
     Rsrc req;
     int status;
+	MabPtr mab_block;
     struct pcb * next;
 }; 
 

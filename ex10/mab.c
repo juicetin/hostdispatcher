@@ -48,9 +48,9 @@ MabPtr memChk(MabPtr m, int size)
 			return NULL;
 		}
 	}
-	/* Continue splitting if right block size 
-	 * hasn't been reached yet, and child buddies
-	 * have yet to be created*/
+	/* Continue splitting if right block size hasn't been
+	 * reached yet, child buddies haven't been created yet,
+	 * and current block size is still too large */
 	else if (!m->left && !m->right && m->size > block_size)
 	{
 		m = memSplit(m, m->size);
@@ -96,6 +96,7 @@ MabPtr memAlloc(MabPtr m, int size)
 	if (needed)
 	{
 		needed->allocated = blockSizeNeeded(size);
+		printf("%d\n", needed->allocated);
 	}
 	return needed;
 }
@@ -109,6 +110,7 @@ MabPtr memAlloc(MabPtr m, int size)
  * ***********************************************/
 MabPtr memFree(MabPtr m)
 {
+	printf("%d\n", m->allocated);
 	m->allocated = 0;
 
 	/* Recursively merge buddies together until

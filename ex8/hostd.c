@@ -120,25 +120,22 @@ int main (int argc, char *argv[]) {
 	//     (already set to zero above)
 
 	//  4. While there's anything in any of  the queues or there is a currently running process:
-	while (inputqueue != NULL || rrqueue != NULL || currentprocess != NULL)
+	while (inputqueue || rrqueue || currentprocess)
 	{
 		//	i. Unload any pending process from the input queue
 				//While (head-of-input-queue.arrival-time <= dispatch timer) dequeue process from input queue and enqueue on RR queue
-
-
-		while (inputqueue != NULL && inputqueue->arrivaltime <= timer)
+		while (inputqueue && inputqueue->arrivaltime <= timer)
 		{
-			//process = deqPcb(&inputqueue);
 			rrqueue = enqPcb(rrqueue, deqPcb(&inputqueue));
 		}
 
 		//	ii. If a process is currently running
-		if (currentprocess != NULL && currentprocess->status == PCB_RUNNING)
+		if (currentprocess)
 		{
 			//	a. Decrement process remainingcputime
 			currentprocess->remainingcputime--;
 			//	b. If time's up
-			if (currentprocess->remainingcputime < 0)
+			if (currentprocess->remainingcputime == 0)
 			{
 				//	A. Send SIGINT to the process to terminate it
 				terminatePcb(currentprocess);
@@ -147,7 +144,7 @@ int main (int argc, char *argv[]) {
 				currentprocess = NULL;
 			}
 			//	c. else if other processes are waiting in RR queue
-			else if (rrqueue != NULL)
+			else if (rrqueue)
 			{
 				//	A. Send SIGSTP to suspend it
 				suspendPcb(currentprocess);
@@ -158,7 +155,7 @@ int main (int argc, char *argv[]) {
 		}
 
 		//	iii. If no process currently running && RR queue is not empty
-		if (currentprocess == NULL && rrqueue != NULL)
+		if (!currentprocess && rrqueue)
 		{
 			//	a. Dequeue process from RR queue
 			//PcbPtr tmp = deqPcb(&rrqueue);

@@ -111,6 +111,7 @@ int main (int argc, char *argv[]) {
 						&(process->req.printers), &(process->req.scanners),
 						&(process->req.modems), &(process->req.cds))) == 8) {
 			process->status = PCB_INITIALIZED;
+			process->mab_block = NULL;
 			inputqueue = enqPcb(inputqueue, process);
 		}
 		else if (val_check >= 0){
@@ -149,10 +150,20 @@ int main (int argc, char *argv[]) {
 		// While (head of user job queue.mbytes can be alloecated)
 		// dequeue process from user job queue, allocate memory to process and enqueue on higher priority feedback queue
 		// (assigning it the appropriate priority)
-		while (userjobqueue && memAlloc(memory, userjobqueue->mbytes))
+		while (userjobqueue)
 		{
-			int priority = userjobqueue->priority;
-			fbqueue[priority-1] = enqPcb(fbqueue[priority-1], deqPcb(&userjobqueue));
+			MabPtr allocated_mem = memAlloc(memory, userjobqueue->mbytes);
+			if (allocated_mem)
+			{
+				int priority = userjobqueue->priority;
+				fbqueue[priority-1] = enqPcb(fbqueue[priority-1], deqPcb(&userjobqueue));
+				fbqueue[priority-1]->mab_block = allocated_mem;
+				//printf("%d\n", fbqueue[priority-1]->mab_block->allocated);
+			}
+			else
+			{
+				break;
+			}
 		}
 
 		//	iii. if a process is currently running
@@ -165,10 +176,11 @@ int main (int argc, char *argv[]) {
 			{
 				// A. terminate process
 				terminatePcb(currentprocess);
-				
+
 				//TODO
 				// B. Free memory allocated to process
 				// memFree(block for this process);
+				//memFree(currentprocess->mab_block);
 
 				// C. free up process structure memory
 				free(currentprocess);
@@ -230,7 +242,7 @@ int main (int argc, char *argv[]) {
 
 /****
 
-	Checks whether any feedback queues contain queued processes
+  Checks whether any feedback queues contain queued processes
 
  ****/
 bool fbQueuesNotNull (PcbPtr *fbqueue)
@@ -247,15 +259,15 @@ bool fbQueuesNotNull (PcbPtr *fbqueue)
 
 /*******************************************************************
 
-	char * StripPath(char * pathname);
+  char * StripPath(char * pathname);
 
-	strip path from file name
+  strip path from file name
 
-	pathname - file name, with or without leading path
+  pathname - file name, with or without leading path
 
-	returns pointer to file name part of pathname
-	if NULL or pathname is a directory ending in a '/'
-	returns NULL
+  returns pointer to file name part of pathname
+  if NULL or pathname is a directory ending in a '/'
+  returns NULL
  *******************************************************************/
 
 char * StripPath(char * pathname) {
