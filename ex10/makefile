@@ -1,4 +1,5 @@
 SOURCES=hostd.c pcb.c mab.c 
 
 all: $(SOURCES)
-	@clang $(SOURCES) -o hostd
+	@clang -g $(SOURCES) -o hostd
+	@./hostd feedback.txt

@@ -96,7 +96,7 @@ MabPtr memAlloc(MabPtr m, int size)
 	if (needed)
 	{
 		needed->allocated = blockSizeNeeded(size);
-		printf("%d\n", needed->allocated);
+		//printf("%d\n", needed->allocated);
 	}
 	return needed;
 }
@@ -110,23 +110,15 @@ MabPtr memAlloc(MabPtr m, int size)
  * ***********************************************/
 MabPtr memFree(MabPtr m)
 {
-	printf("%d\n", m->allocated);
 	m->allocated = 0;
 
 	/* Recursively merge buddies together until
 	 * a buddy is found that has allocated memory */
-	while (1)
+	while(m)
 	{
 		m = memMerge(m);
-		if (m)
-		{
-			m->allocated = 0;
-		}
-		else
-		{
-			break;
-		}
 	}
+
 	return m;
 }
 
@@ -148,21 +140,23 @@ MabPtr memFree(MabPtr m)
  * ***********************************************/
 MabPtr memMerge(MabPtr m)
 {
-	if (m->parent)
+	if (!m->parent)
 	{
-		MabPtr p_left = m->parent->left;
-		MabPtr p_right = m->parent->right;
-		if (p_left->allocated == 0 && p_right->allocated == 0)
-		{
-			free(p_left);
-			free(p_right);
-			p_left = NULL;
-			p_right = NULL;
-			return m->parent;
-		}
 		return NULL;
 	}
-	return NULL;
+
+	MabPtr parent = m->parent;
+	if (parent->left->allocated != 0 || parent->right->allocated != 0)
+	{
+		return NULL;
+	}
+
+	free(parent->left);
+	free(parent->right);
+	parent->left = NULL;
+	parent->right = NULL;
+
+	return parent;
 }
 
 /*************************************************

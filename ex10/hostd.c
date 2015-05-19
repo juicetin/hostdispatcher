@@ -66,6 +66,7 @@ bool fbQueuesNotNull (PcbPtr *fbqueue);
 /******************************************************/
 
 int main (int argc, char *argv[]) {
+	
 	char * inputfile;				// job dispatch file
 	FILE * inputliststream;
 	PcbPtr inputqueue = NULL;     	// input queue buffer
@@ -79,6 +80,8 @@ int main (int argc, char *argv[]) {
 	PcbPtr process = NULL;        // working pcb pointer
 	int timer = 0;                // dispatcher timer 
 
+	//	Create root node of memory allocation blocks
+	//	for buddy system
 	MabPtr memory = malloc(sizeof(Mab));
 	memory->size = 1024;
 	memory->allocated = 0;
@@ -138,12 +141,19 @@ int main (int argc, char *argv[]) {
 	while (inputqueue || fbQueuesNotNull(fbqueue) || userjobqueue
 			|| currentprocess)
 	{
+		//printf("%p %d %p %p\n",
+		//		inputqueue,
+		//		fbQueuesNotNull(fbqueue),
+		//		userjobqueue,
+		//		currentprocess);
+	
 		// i. Unload pending processes from the input queue
 		// 		While (head-of-input-queue.arrival-time <= dispatch timer)
 		// 		dequeue process from input queue and enqueue on user job queue
 		while (inputqueue && inputqueue->arrivaltime <= timer)
 		{
-			userjobqueue = enqPcb(userjobqueue, deqPcb(&inputqueue));
+			PcbPtr tmp = deqPcb(&inputqueue);
+			userjobqueue = enqPcb(userjobqueue, tmp);
 		}
 
 		// ii. Unload pending processes from user job queue:
@@ -152,13 +162,16 @@ int main (int argc, char *argv[]) {
 		// (assigning it the appropriate priority)
 		while (userjobqueue)
 		{
+
 			MabPtr allocated_mem = memAlloc(memory, userjobqueue->mbytes);
+			printf("%p %p\n", memory->left, memory->right);
+			
 			if (allocated_mem)
 			{
-				int priority = userjobqueue->priority;
-				fbqueue[priority-1] = enqPcb(fbqueue[priority-1], deqPcb(&userjobqueue));
-				fbqueue[priority-1]->mab_block = allocated_mem;
-				//printf("%d\n", fbqueue[priority-1]->mab_block->allocated);
+				int priority = userjobqueue->priority - 1;
+				PcbPtr tmp = deqPcb(&userjobqueue);
+				tmp->mab_block = allocated_mem;
+				fbqueue[priority] = enqPcb(fbqueue[priority], tmp);
 			}
 			else
 			{
@@ -180,7 +193,8 @@ int main (int argc, char *argv[]) {
 				//TODO
 				// B. Free memory allocated to process
 				// memFree(block for this process);
-				//memFree(currentprocess->mab_block);
+				memFree(currentprocess->mab_block);
+				currentprocess->mab_block = NULL;
 
 				// C. free up process structure memory
 				free(currentprocess);
@@ -215,7 +229,6 @@ int main (int argc, char *argv[]) {
 					break;
 				}
 			}
-			PcbPtr tmp = NULL;
 			if (fb != -1)
 			{
 				currentprocess = deqPcb(&fbqueue[fb]);	

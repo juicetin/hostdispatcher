@@ -79,7 +79,6 @@ struct pcb {
     int priority;
     int remainingcputime;
     int mbytes;
-//    MabPtr memoryblock;
     Rsrc req;
     int status;
 	MabPtr mab_block;
