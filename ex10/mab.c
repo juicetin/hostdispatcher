@@ -96,7 +96,6 @@ MabPtr memAlloc(MabPtr m, int size)
 	if (needed)
 	{
 		needed->allocated = blockSizeNeeded(size);
-		//printf("%d\n", needed->allocated);
 	}
 	return needed;
 }
@@ -140,7 +139,7 @@ MabPtr memFree(MabPtr m)
  * ***********************************************/
 MabPtr memMerge(MabPtr m)
 {
-	if (!m->parent)
+	if (!m->parent || !m->parent->left || !m->parent->right)
 	{
 		return NULL;
 	}
@@ -150,13 +149,12 @@ MabPtr memMerge(MabPtr m)
 	{
 		return NULL;
 	}
-
 	free(parent->left);
 	free(parent->right);
 	parent->left = NULL;
 	parent->right = NULL;
 
-	return parent;
+	return m->parent;
 }
 
 /*************************************************

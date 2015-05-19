@@ -141,12 +141,6 @@ int main (int argc, char *argv[]) {
 	while (inputqueue || fbQueuesNotNull(fbqueue) || userjobqueue
 			|| currentprocess)
 	{
-		//printf("%p %d %p %p\n",
-		//		inputqueue,
-		//		fbQueuesNotNull(fbqueue),
-		//		userjobqueue,
-		//		currentprocess);
-	
 		// i. Unload pending processes from the input queue
 		// 		While (head-of-input-queue.arrival-time <= dispatch timer)
 		// 		dequeue process from input queue and enqueue on user job queue
@@ -164,7 +158,6 @@ int main (int argc, char *argv[]) {
 		{
 
 			MabPtr allocated_mem = memAlloc(memory, userjobqueue->mbytes);
-			printf("%p %p\n", memory->left, memory->right);
 			
 			if (allocated_mem)
 			{
@@ -194,7 +187,6 @@ int main (int argc, char *argv[]) {
 				// B. Free memory allocated to process
 				// memFree(block for this process);
 				memFree(currentprocess->mab_block);
-				currentprocess->mab_block = NULL;
 
 				// C. free up process structure memory
 				free(currentprocess);
