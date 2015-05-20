@@ -69,10 +69,11 @@ int main (int argc, char *argv[]) {
 	
 	char * inputfile;				// job dispatch file
 	FILE * inputliststream;
-	PcbPtr inputqueue = NULL;     	// input queue buffer
+	PcbPtr inputqueue = NULL;     	// input queue 
+	PcbPtr realtimebuffer = NULL;
 	PcbPtr realtimequeue = NULL;	// real time job queue buffer
-	PcbPtr userjobqueue = NULL;	 	// user job queue buffer
-	PcbPtr fbqueue[3];				// feedback queue buffers
+	PcbPtr userjobqueue = NULL;	 	// user job queue 
+	PcbPtr fbqueue[3];				// feedback queues 
 	for (int i = 0; i < 3; ++i)
 	{
 		fbqueue[i] = NULL;
