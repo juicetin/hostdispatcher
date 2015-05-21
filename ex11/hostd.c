@@ -146,7 +146,7 @@ int main (int argc, char *argv[]) {
 
 	//	5. While there's anything in any of the queues or there is a currenly running process
 	while (inputqueue || fbQueuesNotNull(fbqueue) || userjobqueue
-			|| currentprocess || realtimequeue)
+			|| currentprocess /*|| realtimequeue*/)
 	{
 		// i. Unload pending processes from the input queue
 		// 		While (head-of-input-queue.arrival-time <= dispatch timer)
@@ -181,12 +181,8 @@ int main (int argc, char *argv[]) {
 			 *	and fail from allocaint mem/rsrcs*/
 
 			MabPtr allocated_mem = memAlloc(memory, userjobqueue->mbytes);
-			RsrcPtr allocated_rsrc = rsrcAlloc(resources, userjobqueue->req);
 
-			if (!allocated_mem && allocated_rsrc)
-				rsrcFree(resources, userjobqueue->req);
-
-			if (allocated_mem && allocated_rsrc)
+			if (allocated_mem && rsrcChk(resources,userjobqueue->req))
 			{
 				int priority = userjobqueue->priority - 1;
 				//	a. dequeue process from user job queue
@@ -196,7 +192,7 @@ int main (int argc, char *argv[]) {
 				tmp->mab_block = allocated_mem;
 
 				//	c. allocate resources to the process
-				//	(DONE, above)
+				RsrcPtr allocated_Rsrc = rsrcAlloc(resources, tmp->req);
 
 				//	d. enqueue on appropriate priority feedback queue
 				fbqueue[priority] = enqPcb(fbqueue[priority], tmp);
@@ -249,22 +245,22 @@ int main (int argc, char *argv[]) {
 
 		//	iv. If no process currently running and real time queue and feedback
 		//	queue are not all empty
-		if (!currentprocess && (fbQueuesNotNull(fbqueue) || realtimequeue))
+		if (!currentprocess && (fbQueuesNotNull(fbqueue)/* || realtimequeue*/))
 		{
 			// a. Dequeue a process from the highest priority feedback queue that is not empty
-				//	A. Real time queue takes priority 
-			if (realtimequeue)
-			{
-				MabPtr allocated_mem = memAlloc(memory, realtimequeue->mbytes);
-				if (allocated_mem)
-				{
-					currentprocess = deqPcb(&realtimequeue);
-					currentprocess->mab_block = allocated_mem;
-				}
-			}
-				//	B. Once real time queue is cleared, then give feedback
-				//	queues service
-			else if (fbQueuesNotNull(fbqueue))
+			//	A. Real time queue takes priority 
+			//if (realtimequeue)
+			//{
+			//	MabPtr allocated_mem = memAlloc(memory, realtimequeue->mbytes);
+			//	if (allocated_mem)
+			//	{
+			//		currentprocess = deqPcb(&realtimequeue);
+			//		currentprocess->mab_block = allocated_mem;
+			//	}
+			//}
+			//	B. Once real time queue is cleared, then give feedback
+			//	queues service
+			if (fbQueuesNotNull(fbqueue))
 			{
 				int fb = -1;
 				for (int i = 0; i < 3; ++i)
