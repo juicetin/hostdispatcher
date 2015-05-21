@@ -110,6 +110,7 @@ MabPtr memAlloc(MabPtr m, int size)
 MabPtr memFree(MabPtr m)
 {
 	m->allocated = 0;
+	printf("freed %d\n", m->size);
 
 	/* Recursively merge buddies together until
 	 * a buddy is found that has allocated memory */
@@ -117,7 +118,6 @@ MabPtr memFree(MabPtr m)
 	{
 		m = memMerge(m);
 	}
-
 	return m;
 }
 
@@ -147,6 +147,7 @@ MabPtr memMerge(MabPtr m)
 	MabPtr parent = m->parent;
 	if (parent->left->allocated != 0 || parent->right->allocated != 0)
 	{
+		printf("parent has %d %d\n", parent->left->allocated, parent->right->allocated);
 		return NULL;
 	}
 	free(parent->left);
@@ -154,7 +155,7 @@ MabPtr memMerge(MabPtr m)
 	parent->left = NULL;
 	parent->right = NULL;
 
-	return m->parent;
+	return parent;
 }
 
 /*************************************************
@@ -192,4 +193,44 @@ MabPtr memSplit(MabPtr m, int size)
 		return m;
 	}
 	return NULL;
+}
+
+MabPtr createUserMem(void)
+{
+	MabPtr user_mem;
+	user_mem = malloc(sizeof(Mab));
+	user_mem->size = USER_MEMORY_SIZE;
+	user_mem->allocated = 0;
+	user_mem->left = NULL;
+	user_mem->right = NULL;
+	user_mem->parent = NULL;
+	return user_mem;
+}
+
+MabPtr createRTMem(void)
+{
+	MabPtr rt_mem;
+	rt_mem = malloc(sizeof(Mab));
+	rt_mem->size = RT_MEMORY_SIZE;
+	rt_mem->allocated = 0;
+	rt_mem->left = NULL;
+	rt_mem->right = NULL;
+	rt_mem->parent = NULL;
+	return rt_mem;
+}
+
+void printBuddyTree(MabPtr m)
+{
+	if (m && m->left)
+	{
+		printf("%d/%d ", m->left->allocated, m->left->size);
+	}
+	if (m && m->right)
+	{
+		printf("%d/%d \n", m->right->allocated, m->right->size);
+	}
+	if (m && m->left)
+		printBuddyTree(m->left);
+	if (m && m->right)
+		printBuddyTree(m->right);
 }

@@ -2,6 +2,12 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+/* memory management *******************************/
+
+#define MEMORY_SIZE       1024
+#define RT_MEMORY_SIZE    64
+#define USER_MEMORY_SIZE  (MEMORY_SIZE - RT_MEMORY_SIZE)
+
 struct mab
 {
 	int offset;
@@ -17,9 +23,18 @@ typedef Mab * MabPtr;
 
 int blockSizeNeeded(int size);				//Get smallest power of 2 larger than memory requirement
 
+
+/* memory management function prototypes ********/
+
 MabPtr memChk(MabPtr m, int size);		// check if memory available
 MabPtr memAlloc(MabPtr m, int size);	// allocate memory block
 MabPtr memFree(MabPtr m);							// free memory block
 
 MabPtr memMerge(MabPtr m);						// merge two memory blocks
 MabPtr memSplit(MabPtr m, int size);	// split a memory block
+
+MabPtr createUserMem(void);
+
+MabPtr createRTMem(void);
+
+void printBuddyTree(MabPtr m);

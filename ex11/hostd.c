@@ -1,43 +1,43 @@
 /*******************************************************************
-	printf("%s\n", inputliststream);
+  printf("%s\n", inputliststream);
 
-	OS Eercises - Project 2 - HOST dispatcher - Exercise 7
+  OS Eercises - Project 2 - HOST dispatcher - Exercise 7
 
-	hostd
+  hostd
 
-	hostd is fcfs 'dispatcher' that reads in a list of 'jobs' from a file
-	and 'dispatches' them in a first-come-first-served manner.
+  hostd is fcfs 'dispatcher' that reads in a list of 'jobs' from a file
+  and 'dispatches' them in a first-come-first-served manner.
 
-	time resolution is one second (although this can be changed). 
+  time resolution is one second (although this can be changed). 
 
-	usage
+  usage
 
-	hostd <dispatch file>
+  hostd <dispatch file>
 
-	where
-	<dispatch file> is list of process parameters as specified 
-	for assignment 2.
+  where
+  <dispatch file> is list of process parameters as specified 
+  for assignment 2.
 
-	functionality
+  functionality
 
-	1. Initialize dispatcher queue;
-	2. Fill dispatcher queue from dispatch list file;
-	3. Start dispatcher timer;
-	4. While there's anything in the queue or there is a currently running process:
-	i. If a process is currently running;
-	a. Decrement process remainingcputime;
-	b. If times up:
-	A. Send SIGINT to the process to terminate it;
-	B. Free up process structure memory
-	ii. If no process currently running &&
-	dispatcher queue is not empty &&
-	arrivaltime of process at head of queue is <= dispatcher timer:
-	a. Dequeue process and start it (fork & exec)
-	b. Set it as currently running process;
-	iii. sleep for one second;
-	iv. Increment dispatcher timer;
-	v. Go back to 4.
-	5. Exit
+  1. Initialize dispatcher queue;
+  2. Fill dispatcher queue from dispatch list file;
+  3. Start dispatcher timer;
+  4. While there's anything in the queue or there is a currently running process:
+  i. If a process is currently running;
+  a. Decrement process remainingcputime;
+  b. If times up:
+  A. Send SIGINT to the process to terminate it;
+  B. Free up process structure memory
+  ii. If no process currently running &&
+  dispatcher queue is not empty &&
+  arrivaltime of process at head of queue is <= dispatcher timer:
+  a. Dequeue process and start it (fork & exec)
+  b. Set it as currently running process;
+  iii. sleep for one second;
+  iv. Increment dispatcher timer;
+  v. Go back to 4.
+  5. Exit
 
  ********************************************************************
 
@@ -53,7 +53,7 @@ author:  Dr Ian G Graham, ian.graham@griffith.edu.au
 
 /******************************************************
 
-	internal functions
+  internal functions
 
  ******************************************************/
 
@@ -66,7 +66,7 @@ bool fbQueuesNotNull (PcbPtr *fbqueue);
 /******************************************************/
 
 int main (int argc, char *argv[]) {
-	
+
 	char * inputfile;				// job dispatch file
 	FILE * inputliststream;
 	PcbPtr inputqueue = NULL;     	// input queue 
@@ -146,7 +146,7 @@ int main (int argc, char *argv[]) {
 
 	//	5. While there's anything in any of the queues or there is a currenly running process
 	while (inputqueue || fbQueuesNotNull(fbqueue) || userjobqueue
-			|| currentprocess /*|| realtimequeue*/)
+			|| currentprocess || realtimebuffer)
 	{
 		// i. Unload pending processes from the input queue
 		// 		While (head-of-input-queue.arrival-time <= dispatch timer)
@@ -154,11 +154,11 @@ int main (int argc, char *argv[]) {
 		while (inputqueue && inputqueue->arrivaltime <= timer)
 		{
 			PcbPtr tmp = deqPcb(&inputqueue);
-			
+
 			//	a. Real-time queue or
 			if (tmp->priority == 0)
 			{
-				realtimequeue = enqPcb(realtimequeue, tmp);
+				realtimebuffer = enqPcb(realtimebuffer, tmp);
 			}
 
 			//	b. User job queue
@@ -172,18 +172,41 @@ int main (int argc, char *argv[]) {
 		//	while (head-of-user-job-queue.mbytes can be allocated and resources
 		//	available)
 
-		while (userjobqueue)
+		while (realtimebuffer)
+		{
+			MabPtr allocated_mem = memAlloc(memory, realtimebuffer->mbytes);
+			if (allocated_mem)
+			{
+				PcbPtr tmp = deqPcb(&realtimebuffer);
+				tmp->mab_block = allocated_mem;
+				realtimequeue = enqPcb(realtimequeue, tmp);
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		while (!realtimequeue && userjobqueue)
 		{
 			//TODO - MAJOR
+			//DONE - rsrcChk
 			/*	Change rsrChk and memChk to do just that - only CHECK, so that
 			 *	withi nthe if loop, the actual allocation can do the checking so
 			 *	I can remove this shitty bandage solution of preventing a pass
 			 *	and fail from allocaint mem/rsrcs*/
 
+			//	printf("before\n");
+			//	printBuddyTree(memory);
 			MabPtr allocated_mem = memAlloc(memory, userjobqueue->mbytes);
+			//	printf("after\n");
+			//	printBuddyTree(memory);
 
 			if (allocated_mem && rsrcChk(resources,userjobqueue->req))
 			{
+				printBuddyTree(memory);
+				printf("\n");
+
 				int priority = userjobqueue->priority - 1;
 				//	a. dequeue process from user job queue
 				PcbPtr tmp = deqPcb(&userjobqueue);
@@ -199,6 +222,13 @@ int main (int argc, char *argv[]) {
 			}
 			else
 			{
+				//	TODO
+				//	MUCH HACKY CODE - FIND A BETTER WAY ABOVE TO PREVENT THE NEED
+				//	TO ALLOCATE MEM THEN FREE IF RESOURCES AREN'T AVAILABLE
+				if (allocated_mem)
+				{
+					memFree(allocated_mem);
+				}
 				break;
 			}
 		}
@@ -228,7 +258,7 @@ int main (int argc, char *argv[]) {
 			// TODO (requirement changed)
 			//	c. else if it is a user process and other processes are waiting
 			//	in any of the queues
-			else if (currentprocess->priority != 0 || fbQueuesNotNull(fbqueue) || realtimequeue)
+			else if (currentprocess->priority != 0 && (fbQueuesNotNull(fbqueue) || realtimequeue))
 			{
 				// A. suspend process
 				suspendPcb(currentprocess);
@@ -245,22 +275,17 @@ int main (int argc, char *argv[]) {
 
 		//	iv. If no process currently running and real time queue and feedback
 		//	queue are not all empty
-		if (!currentprocess && (fbQueuesNotNull(fbqueue)/* || realtimequeue*/))
+		if (!currentprocess && (fbQueuesNotNull(fbqueue) || realtimequeue))
 		{
 			// a. Dequeue a process from the highest priority feedback queue that is not empty
 			//	A. Real time queue takes priority 
-			//if (realtimequeue)
-			//{
-			//	MabPtr allocated_mem = memAlloc(memory, realtimequeue->mbytes);
-			//	if (allocated_mem)
-			//	{
-			//		currentprocess = deqPcb(&realtimequeue);
-			//		currentprocess->mab_block = allocated_mem;
-			//	}
-			//}
+			if (realtimequeue)
+			{
+				currentprocess = deqPcb(&realtimequeue);
+			}
 			//	B. Once real time queue is cleared, then give feedback
 			//	queues service
-			if (fbQueuesNotNull(fbqueue))
+			else if (fbQueuesNotNull(fbqueue))
 			{
 				int fb = -1;
 				for (int i = 0; i < 3; ++i)
