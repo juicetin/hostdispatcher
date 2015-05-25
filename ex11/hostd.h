@@ -1,3 +1,10 @@
+/*
+Name: Justin Ting
+SID: 430203826
+Tutor: Jeshua
+Tutorial Time: Monday 10am
+*/
+
 #ifndef GHOST_H
 #define GHOST_H
 /*******************************************************************
@@ -32,6 +39,7 @@ author:  Dr Ian G Graham, ian.graham@griffith.edu.au
 #define TRUE 1
 #endif
 
+#define PRIORITY_QUEUES 3
 #define DEFAULT_NAME "hostd"
 #define QUANTUM  1
 #endif

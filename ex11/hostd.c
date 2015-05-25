@@ -73,8 +73,8 @@ int main (int argc, char *argv[]) {
 	PcbPtr realtimebuffer = NULL;
 	PcbPtr realtimequeue = NULL;	// real time job queue buffer
 	PcbPtr userjobqueue = NULL;	 	// user job queue 
-	PcbPtr fbqueue[3];				// feedback queues 
-	for (int i = 0; i < 3; ++i)
+	PcbPtr fbqueue[PRIORITY_QUEUES];				// feedback queues 
+	for (int i = 0; i < PRIORITY_QUEUES; ++i)
 	{
 		fbqueue[i] = NULL;
 	}
@@ -90,22 +90,11 @@ int main (int argc, char *argv[]) {
 	//     (already initialised in assignments above)
 
 	//	2. Initialise memory and resource allocation structures
-	//	Create root node of memory allocation blocks
-	//	for buddy system
-	MabPtr memory = malloc(sizeof(Mab));
-	memory->size = 1024;
-	memory->allocated = 0;
-	memory->offset = 0;
-	memory->left = NULL;
-	memory->right = NULL;
-	memory->parent = NULL;
-
-	//	Create node to hold available I/O resources
-	RsrcPtr resources = malloc(sizeof(Rsrc));
-	resources->printers = 2;
-	resources->scanners = 1;
-	resources->modems = 1;
-	resources->cds = 2;
+	//	Create root node of memory allocation block for buddy system, and allocate reserved RT memory
+	MabPtr memory = createUserMem();
+	memAlloc(memory, RT_MEMORY_SIZE);
+	MabPtr rt_memory = createRTMem();
+	RsrcPtr resources = createRsrcs();
 
 	//  3. Fill dispatcher queue from dispatch list file;
 	if (!(inputliststream = fopen(inputfile, "r"))) { // open it
@@ -174,7 +163,7 @@ int main (int argc, char *argv[]) {
 
 		while (realtimebuffer)
 		{
-			MabPtr allocated_mem = memAlloc(memory, realtimebuffer->mbytes);
+			MabPtr allocated_mem = memAlloc(rt_memory, realtimebuffer->mbytes);
 			if (allocated_mem)
 			{
 				PcbPtr tmp = deqPcb(&realtimebuffer);
@@ -189,26 +178,14 @@ int main (int argc, char *argv[]) {
 
 		while (!realtimequeue && userjobqueue)
 		{
-			//TODO - MAJOR
-			//DONE - rsrcChk
-			/*	Change rsrChk and memChk to do just that - only CHECK, so that
-			 *	withi nthe if loop, the actual allocation can do the checking so
-			 *	I can remove this shitty bandage solution of preventing a pass
-			 *	and fail from allocaint mem/rsrcs*/
 
-			//	printf("before\n");
-			//	printBuddyTree(memory);
+			//	Try to allocate memory for the user process
 			MabPtr allocated_mem = memAlloc(memory, userjobqueue->mbytes);
-			//	printf("after\n");
-			//	printBuddyTree(memory);
 
 			if (allocated_mem && rsrcChk(resources,userjobqueue->req))
 			{
-				printBuddyTree(memory);
-				printf("\n");
-
-				int priority = userjobqueue->priority - 1;
 				//	a. dequeue process from user job queue
+				int priority = userjobqueue->priority - 1;
 				PcbPtr tmp = deqPcb(&userjobqueue);
 
 				//	b. allocate memory to the process
@@ -222,13 +199,8 @@ int main (int argc, char *argv[]) {
 			}
 			else
 			{
-				//	TODO
-				//	MUCH HACKY CODE - FIND A BETTER WAY ABOVE TO PREVENT THE NEED
-				//	TO ALLOCATE MEM THEN FREE IF RESOURCES AREN'T AVAILABLE
-				if (allocated_mem)
-				{
-					memFree(allocated_mem);
-				}
+				//	Free memory in case it was allocated but resources failed
+				memFree(allocated_mem);
 				break;
 			}
 		}
@@ -245,9 +217,9 @@ int main (int argc, char *argv[]) {
 				// A. terminate process
 				terminatePcb(currentprocess);
 
-				// B. Free memory and resources allocated to process (resources
-				// user only)
+				// B. Free memory and resources allocated to process (resources user only)
 				rsrcFree(resources, currentprocess->req);
+				// Automatically frees appropriately for RT/U memory as it recursively frees parents
 				memFree(currentprocess->mab_block);
 
 				// C. free up process structure memory
@@ -255,9 +227,7 @@ int main (int argc, char *argv[]) {
 				currentprocess = NULL;
 			}
 
-			// TODO (requirement changed)
-			//	c. else if it is a user process and other processes are waiting
-			//	in any of the queues
+			//	c. else if it is a user process and other processes are waiting in any of the queues
 			else if (currentprocess->priority != 0 && (fbQueuesNotNull(fbqueue) || realtimequeue))
 			{
 				// A. suspend process
@@ -273,8 +243,7 @@ int main (int argc, char *argv[]) {
 			}
 		}
 
-		//	iv. If no process currently running and real time queue and feedback
-		//	queue are not all empty
+		//	iv. If no process currently running and real time queue and feedback queue are not all empty
 		if (!currentprocess && (fbQueuesNotNull(fbqueue) || realtimequeue))
 		{
 			// a. Dequeue a process from the highest priority feedback queue that is not empty
@@ -283,41 +252,47 @@ int main (int argc, char *argv[]) {
 			{
 				currentprocess = deqPcb(&realtimequeue);
 			}
-			//	B. Once real time queue is cleared, then give feedback
-			//	queues service
-			else if (fbQueuesNotNull(fbqueue))
+			//	B. Once real time queue is cleared, then give feedback queues service
+			else if (!realtimebuffer && fbQueuesNotNull(fbqueue))
 			{
-				int fb = -1;
-				for (int i = 0; i < 3; ++i)
+				//	Find highest priority non-empty feedback queue
+				int fb_index = -1;
+				for (int i = 0; i < PRIORITY_QUEUES; ++i)
 				{
 					if (fbqueue[i] != NULL)
 					{
-						fb = i;
+						fb_index = i;
 						break;
 					}
 				}
-				if (fb != -1)
+				if (fb_index != -1)
 				{
-					currentprocess = deqPcb(&fbqueue[fb]);	
+					currentprocess = deqPcb(&fbqueue[fb_index]);	
 				}
 			}
 
-			// b. If already started but suspended, resume process
-			// else start process
+			// b. If already started but suspended, resume process else start process
 			// c. Set it as currently running process
-			startPcb(currentprocess);
-			currentprocess->status = PCB_RUNNING;
+			// Requires a check for when realtimebuffer hasn't been fully unloaded yet,
+			// but they need to be first queued onto a currently empty realtimequeue
+			if (currentprocess)
+			{
+				startPcb(currentprocess);
+				currentprocess->status = PCB_RUNNING;
+			}
 		}
 
-
-
 		// v. sleep for one second
-		sleep(1);
+		sleep(QUANTUM);
 
 		// vi. increment dispatch timer
 		timer++;
 		// vii. go back to 4
 	}
+
+	free (memory);
+	free (rt_memory);
+	free (resources);
 
 	//	5. Exit
 	exit (0);
@@ -330,7 +305,7 @@ int main (int argc, char *argv[]) {
  ****/
 bool fbQueuesNotNull (PcbPtr *fbqueue)
 {
-	for (int i = 0; i < 3; ++i)
+	for (int i = 0; i < PRIORITY_QUEUES; ++i)
 	{
 		if (fbqueue[i])
 		{

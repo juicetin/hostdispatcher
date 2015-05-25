@@ -1,8 +1,15 @@
+/*
+Name: Justin Ting
+SID: 430203826
+Tutor: Jeshua
+Tutorial Time: Monday 10am
+*/
+
 #include "mab.h"
 
 /*************************************************
- * int BlockSizeNeeded (int size) - given the actual
- * 		block size needed for a process,
+ * int BlockSizeNeeded (int size):
+ * 		given the actual block size needed for a process,
  * returns:
  * 		the smallest power of 2 that equates/exceeds
  * 		it
@@ -19,8 +26,8 @@ int blockSizeNeeded(int size)
 }
 
 /*************************************************
- * MabPtr memChk(MabPtr m, int size) - find if
- * 		there is a correctly size block available
+ * MabPtr memChk(MabPtr m, int size):
+ * 		find if there is a correctly size block available
  * 		to allocate to the process in question
  * returns:
  * 		MabPtr containing info on a correctly sized
@@ -83,9 +90,8 @@ MabPtr memChk(MabPtr m, int size)
 }
 
 /*************************************************
- * MabPtr memAlloc(MabPtr m, int size) - allocates
- * 		memory for a process given a size (NOT SURE;
- * 		COULD BE JUST FOR THE MAB ITSELF?)
+ * MabPtr memAlloc(MabPtr m, int size):
+ * 		allocates memory for a process given a size 
  * returns:
  * 		MabPtr to Mab of successfully allocated mem.
  * 		NULL is malloc failed
@@ -101,41 +107,45 @@ MabPtr memAlloc(MabPtr m, int size)
 }
 
 /*************************************************
- * MabPtr memFree(MabPtr m) - frees the memory 
- * 		indicated by the info inside the Mab at m
- * 		by marking it as free
+ * MabPtr memFree(MabPtr m):
+ * 		frees the memory indicated by the info inside 
+ * 		the Mab at m by marking it as free
  * returns:
  * 		MabPtr of the freed block
  * ***********************************************/
 MabPtr memFree(MabPtr m)
 {
-	m->allocated = 0;
-	printf("freed %d\n", m->size);
-
-	/* Recursively merge buddies together until
-	 * a buddy is found that has allocated memory */
-	while(m)
+	if (m)
 	{
-		m = memMerge(m);
+		m->allocated = 0;
+		//printf("freed %d\n", m->size);
+
+		/* Recursively merge buddies together until
+		 * a buddy is found that has allocated memory */
+		while(m)
+		{
+			m = memMerge(m);
+		}
 	}
 	return m;
 }
 
 /*************************************************
- *	MabPtr memMerge(MabPtr m) - merges two unused
- *			blocks back into a larger block
+ *	MabPtr memMerge(MabPtr m):
+ *		merges two unused
+ *		blocks back into a larger block
  *	returns:
- *			MabPtr of parent block 
+ *		MabPtr of parent block 
  *
- *			NULL if can't go further up the tree,
- *			i.e., current Mab block has a NULL
- *			parent
+ *		NULL if can't go further up the tree,
+ *		i.e., current Mab block has a NULL
+ *		parent
  *
- *			NULL if it's buddy isn't also
- *			unallocated, as an indicator from the
- *			function from which memMerge is called
- *			that it should stop recursing up the
- *			tree
+ *		NULL if it's buddy isn't also
+ *		unallocated, as an indicator from the
+ *		function from which memMerge is called
+ *		that it should stop recursing up the
+ *		tree
  * ***********************************************/
 MabPtr memMerge(MabPtr m)
 {
@@ -147,7 +157,6 @@ MabPtr memMerge(MabPtr m)
 	MabPtr parent = m->parent;
 	if (parent->left->allocated != 0 || parent->right->allocated != 0)
 	{
-		printf("parent has %d %d\n", parent->left->allocated, parent->right->allocated);
 		return NULL;
 	}
 	free(parent->left);
@@ -159,9 +168,9 @@ MabPtr memMerge(MabPtr m)
 }
 
 /*************************************************
- * MabPtr memSplit(MabPtr m, int size) - splits an
- * 		unused memory block into two equal left and
- * 		right children
+ * MabPtr memSplit(MabPtr m, int size):
+ * 		splits an unused memory block into two equal 
+ * 		left and right children
  * returns:
  * 		a pointer to the successfully (original)
  * 		parent of the two split blocks
@@ -195,11 +204,18 @@ MabPtr memSplit(MabPtr m, int size)
 	return NULL;
 }
 
+/*************************************************
+ * MabPtr createUserMem(void):
+ * 		allocates the main memory block - root 
+ * 		node of buddy tree
+ * returns:
+ * 		pointer to the root buddy node
+ * ***********************************************/
 MabPtr createUserMem(void)
 {
 	MabPtr user_mem;
 	user_mem = malloc(sizeof(Mab));
-	user_mem->size = USER_MEMORY_SIZE;
+	user_mem->size = MEMORY_SIZE;
 	user_mem->allocated = 0;
 	user_mem->left = NULL;
 	user_mem->right = NULL;
@@ -207,6 +223,13 @@ MabPtr createUserMem(void)
 	return user_mem;
 }
 
+/*************************************************
+ * MabPtr createUserMem(void):
+ * 		allocates the realtmie memory block - root
+ * 		node of buddy tree
+ * returns:
+ * 		pointer to the root buddy node
+ * ***********************************************/
 MabPtr createRTMem(void)
 {
 	MabPtr rt_mem;
@@ -219,16 +242,13 @@ MabPtr createRTMem(void)
 	return rt_mem;
 }
 
+/*************************************************
+ * void printBuddyTree(MabPtr m)
+ * 		takes the root node of a buddy tree and
+ * 		prints all the memory allocated at all nodes
+ * ***********************************************/
 void printBuddyTree(MabPtr m)
 {
-	if (m && m->left)
-	{
-		printf("%d/%d ", m->left->allocated, m->left->size);
-	}
-	if (m && m->right)
-	{
-		printf("%d/%d \n", m->right->allocated, m->right->size);
-	}
 	if (m && m->left)
 		printBuddyTree(m->left);
 	if (m && m->right)

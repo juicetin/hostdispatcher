@@ -1,3 +1,10 @@
+/*
+Name: Justin Ting
+SID: 430203826
+Tutor: Jeshua
+Tutorial Time: Monday 10am
+*/
+
 /*******************************************************************
 
   OS Eercises - Project 2 - HOST dispatcher
