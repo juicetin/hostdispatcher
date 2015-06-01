@@ -232,3 +232,26 @@ PcbPtr deqPcb(PcbPtr * hPtr) {
 	return NULL;
 }
 
+bool checkRTRsrcs(PcbPtr block)
+{
+	return block->req.printers == 0 && block->req.scanners == 0 && 
+		block->req.modems == 0 && block->req.cds == 0;
+}
+
+bool checkUJRsrcs(PcbPtr block)
+{
+	return block->req.printers >= 0 && block->req.printers <= PRINTERS &&
+		   block->req.scanners >= 0 && block->req.scanners <= SCANNERS &&
+		   block->req.modems >= 0 && block->req.modems <= MODEMS &&
+		   block->req.cds >= 0 && block->req.cds <= CDS;
+}
+
+bool checkRTMem(PcbPtr block)
+{
+	return block->mbytes >= 0 && block->mbytes <= RT_MEMORY_SIZE;
+}
+
+bool checkUJMem(PcbPtr block)
+{
+	return block->mbytes >= 0 && block->mbytes <= MEMORY_SIZE / 2;
+}

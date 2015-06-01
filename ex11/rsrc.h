@@ -5,9 +5,13 @@ Tutor: Jeshua
 Tutorial Time: Monday 10am
 */
 
+#ifndef rsrc_h
+#define rsrc_h
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h> 
@@ -32,3 +36,5 @@ RsrcPtr rsrcChk(RsrcPtr, Rsrc);
 RsrcPtr rsrcAlloc(RsrcPtr, Rsrc);
 RsrcPtr rsrcFree(RsrcPtr, Rsrc);
 RsrcPtr createRsrcs(void);
+
+#endif

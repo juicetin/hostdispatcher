@@ -5,6 +5,9 @@ Tutor: Jeshua
 Tutorial Time: Monday 10am
 */
 
+#ifndef mab_h
+#define mab_h
+
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -45,3 +48,5 @@ MabPtr createUserMem(void);
 MabPtr createRTMem(void);
 
 void printBuddyTree(MabPtr m);
+
+#endif

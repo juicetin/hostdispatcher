@@ -163,6 +163,13 @@ int main (int argc, char *argv[]) {
 
 		while (realtimebuffer)
 		{
+			/* Dump real time processes that use invalid amounts of memory or request any resources */
+			if (!checkRTMem(realtimebuffer) || !checkRTRsrcs(realtimebuffer))
+			{
+				deqPcb(&realtimebuffer);
+				printf("Invalid amount of memory or resources requested for realtime job; rejected\n");
+				continue;
+			}
 			MabPtr allocated_mem = memAlloc(rt_memory, realtimebuffer->mbytes);
 			if (allocated_mem)
 			{
@@ -172,13 +179,20 @@ int main (int argc, char *argv[]) {
 			}
 			else
 			{
+				memFree(allocated_mem);
 				break;
 			}
 		}
 
 		while (!realtimequeue && userjobqueue)
 		{
-
+			/* Dump user processes that request invalid amounts of memory or request invalid resources */
+			if (!checkUJMem(userjobqueue) || !checkUJRsrcs(userjobqueue))
+			{
+				printf("Invalid amount of memory or resources requested for user job; rejected\n");
+				deqPcb(&userjobqueue);
+				continue;
+			}
 			//	Try to allocate memory for the user process
 			MabPtr allocated_mem = memAlloc(memory, userjobqueue->mbytes);
 

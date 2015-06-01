@@ -224,8 +224,8 @@ MabPtr createUserMem(void)
 }
 
 /*************************************************
- * MabPtr createUserMem(void):
- * 		allocates the realtmie memory block - root
+ * MabPtr createRTMem(void):
+ * 		allocates the realtime memory block - root
  * 		node of buddy tree
  * returns:
  * 		pointer to the root buddy node

@@ -97,5 +97,10 @@ PcbPtr createnullPcb();
 PcbPtr enqPcb(PcbPtr, PcbPtr);
 PcbPtr deqPcb(PcbPtr*);
 
-#endif
+bool checkRTRsrcs(PcbPtr block);
+bool checkUJRsrcs(PcbPtr block);
 
+bool checkRTMem(PcbPtr block);
+bool checkUJMem(PcbPtr block);
+
+#endif
