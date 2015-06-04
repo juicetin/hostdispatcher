@@ -61,7 +61,7 @@ char * StripPath(char*);
 void PrintUsage(FILE *, char *);
 void SysErrMsg(char *, char *);
 void ErrMsg(char *, char *);
-bool fbQueuesNotNull (PcbPtr *fbqueue);
+bool fbQueuesNotNull (Pcb * *fbqueue);
 
 /******************************************************/
 
@@ -69,17 +69,17 @@ int main (int argc, char *argv[]) {
 
 	char * inputfile;				// job dispatch file
 	FILE * inputliststream;
-	PcbPtr inputqueue = NULL;     	// input queue 
-	PcbPtr realtimebuffer = NULL;
-	PcbPtr realtimequeue = NULL;	// real time job queue buffer
-	PcbPtr userjobqueue = NULL;	 	// user job queue 
-	PcbPtr fbqueue[PRIORITY_QUEUES];				// feedback queues 
+	Pcb * inputqueue = NULL;     	// input queue 
+	Pcb * realtimebuffer = NULL;
+	Pcb * realtimequeue = NULL;	// real time job queue buffer
+	Pcb * userjobqueue = NULL;	 	// user job queue 
+	Pcb * fbqueue[PRIORITY_QUEUES];				// feedback queues 
 	for (int i = 0; i < PRIORITY_QUEUES; ++i)
 	{
 		fbqueue[i] = NULL;
 	}
-	PcbPtr currentprocess = NULL; // current process
-	PcbPtr process = NULL;        // working pcb pointer
+	Pcb * currentprocess = NULL; // current process
+	Pcb * process = NULL;        // working pcb pointer
 	int timer = 0;                // dispatcher timer 
 
 	//  0. Parse command line
@@ -91,11 +91,12 @@ int main (int argc, char *argv[]) {
 
 	//	2. Initialise memory and resource allocation structures
 	//	Create root node of memory allocation block for buddy system, and allocate reserved RT memory
-	MabPtr memory = createUserMem();
+	//	the memAlloc for RT_MEMORy_SIZE is merely a 'dummy' allocate to reserve 64mb for real time processes
+	Mab * memory = createUserMem();
 	memAlloc(memory, RT_MEMORY_SIZE);
-	MabPtr rt_memory = createRTMem();
-	RsrcPtr resources = createRsrcs();
-
+	Mab * rt_memory = createRTMem();
+	Rsrc * resources = createRsrcs();
+	
 	//  3. Fill dispatcher queue from dispatch list file;
 	if (!(inputliststream = fopen(inputfile, "r"))) { // open it
 		SysErrMsg("could not open dispatch list file:", inputfile);
@@ -130,6 +131,7 @@ int main (int argc, char *argv[]) {
 			break;
 		}
 	}
+
 	//  4. Start dispatcher timer;
 	//     (already set to zero above)
 
@@ -142,7 +144,7 @@ int main (int argc, char *argv[]) {
 		// 		dequeue process from input queue and enqueue on user job queue
 		while (inputqueue && inputqueue->arrivaltime <= timer)
 		{
-			PcbPtr tmp = deqPcb(&inputqueue);
+			Pcb * tmp = deqPcb(&inputqueue);
 
 			//	a. Real-time queue or
 			if (tmp->priority == 0)
@@ -170,10 +172,11 @@ int main (int argc, char *argv[]) {
 				printf("Invalid amount of memory or resources requested for realtime job; rejected\n");
 				continue;
 			}
-			MabPtr allocated_mem = memAlloc(rt_memory, realtimebuffer->mbytes);
+
+			Mab * allocated_mem = memAlloc(rt_memory, realtimebuffer->mbytes);
 			if (allocated_mem)
 			{
-				PcbPtr tmp = deqPcb(&realtimebuffer);
+				Pcb * tmp = deqPcb(&realtimebuffer);
 				tmp->mab_block = allocated_mem;
 				realtimequeue = enqPcb(realtimequeue, tmp);
 			}
@@ -187,6 +190,7 @@ int main (int argc, char *argv[]) {
 		while (!realtimequeue && userjobqueue)
 		{
 			/* Dump user processes that request invalid amounts of memory or request invalid resources */
+
 			if (!checkUJMem(userjobqueue) || !checkUJRsrcs(userjobqueue))
 			{
 				printf("Invalid amount of memory or resources requested for user job; rejected\n");
@@ -194,19 +198,20 @@ int main (int argc, char *argv[]) {
 				continue;
 			}
 			//	Try to allocate memory for the user process
-			MabPtr allocated_mem = memAlloc(memory, userjobqueue->mbytes);
+			Mab * allocated_mem = memAlloc(memory, userjobqueue->mbytes);
+
 
 			if (allocated_mem && rsrcChk(resources,userjobqueue->req))
 			{
 				//	a. dequeue process from user job queue
 				int priority = userjobqueue->priority - 1;
-				PcbPtr tmp = deqPcb(&userjobqueue);
+				Pcb * tmp = deqPcb(&userjobqueue);
 
 				//	b. allocate memory to the process
 				tmp->mab_block = allocated_mem;
 
 				//	c. allocate resources to the process
-				RsrcPtr allocated_Rsrc = rsrcAlloc(resources, tmp->req);
+				Rsrc * allocated_Rsrc = rsrcAlloc(resources, tmp->req);
 
 				//	d. enqueue on appropriate priority feedback queue
 				fbqueue[priority] = enqPcb(fbqueue[priority], tmp);
@@ -317,7 +322,7 @@ int main (int argc, char *argv[]) {
   Checks whether any feedback queues contain queued processes
 
  ****/
-bool fbQueuesNotNull (PcbPtr *fbqueue)
+bool fbQueuesNotNull (Pcb * *fbqueue)
 {
 	for (int i = 0; i < PRIORITY_QUEUES; ++i)
 	{

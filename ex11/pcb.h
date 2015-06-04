@@ -13,14 +13,14 @@ Tutorial Time: Monday 10am
 
   pcb - process control block functions for HOST dispatcher
 
-  PcbPtr startPcb(PcbPtr process) - start (or restart) a process
-  PcbPtr suspendPcb(PcbPtr process) - suspend a process
-  PcbPtr terminatePcb(PcbPtr process) - terminate a process
-  PcbPtr printPcb(PcbPtr process, FILE * iostream)
+  Pcb * startPcb(Pcb * process) - start (or restart) a process
+  Pcb * suspendPcb(Pcb * process) - suspend a process
+  Pcb * terminatePcb(Pcb * process) - terminate a process
+  Pcb * printPcb(Pcb * process, FILE * iostream)
   void printPcbHdr(FILE *) - print header for printPcb
-  PcbPtr createnullPcb(void) - create inactive Pcb.
-  PcbPtr enqPcb (PcbPtr headofQ, PcbPtr process)
-  PcbPtr deqPcb (PcbPtr * headofQ);
+  Pcb * createnullPcb(void) - create inactive Pcb.
+  Pcb * enqPcb (Pcb * headofQ, Pcb * process)
+  Pcb * deqPcb (Pcb * * headofQ);
 
   see pcb.c for fuller description of function arguments and returns
 
@@ -78,29 +78,30 @@ struct pcb {
     int mbytes;
     Rsrc req;
     int status;
-	MabPtr mab_block;
+	Mab * mab_block;
     struct pcb * next;
 }; 
 
 typedef struct pcb Pcb;
+
 typedef Pcb * PcbPtr;
 
 /* process management prototypes *****************************/
 
-PcbPtr startPcb(PcbPtr);
-PcbPtr suspendPcb(PcbPtr);
-PcbPtr resumePcb(PcbPtr);
-PcbPtr terminatePcb(PcbPtr);
-PcbPtr printPcb(PcbPtr, FILE *);
+Pcb * startPcb(Pcb *);
+Pcb * suspendPcb(Pcb *);
+Pcb * resumePcb(Pcb *);
+Pcb * terminatePcb(Pcb *);
+Pcb * printPcb(Pcb *, FILE *);
 void   printPcbHdr(FILE *);
-PcbPtr createnullPcb();
-PcbPtr enqPcb(PcbPtr, PcbPtr);
-PcbPtr deqPcb(PcbPtr*);
+Pcb * createnullPcb();
+Pcb * enqPcb(Pcb *, Pcb *);
+Pcb * deqPcb(Pcb **);
 
-bool checkRTRsrcs(PcbPtr block);
-bool checkUJRsrcs(PcbPtr block);
+bool checkRTRsrcs(Pcb * block);
+bool checkUJRsrcs(Pcb * block);
 
-bool checkRTMem(PcbPtr block);
-bool checkUJMem(PcbPtr block);
+bool checkRTMem(Pcb * block);
+bool checkUJMem(Pcb * block);
 
 #endif

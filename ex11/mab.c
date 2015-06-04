@@ -26,17 +26,17 @@ int blockSizeNeeded(int size)
 }
 
 /*************************************************
- * MabPtr memChk(MabPtr m, int size):
+ * Mab * memChk(Mab * m, int size):
  * 		find if there is a correctly size block available
  * 		to allocate to the process in question
  * returns:
- * 		MabPtr containing info on a correctly sized
+ * 		Mab * containing info on a correctly sized
  * 		block
  * ***********************************************/
-MabPtr memChk(MabPtr m, int size)
+Mab * memChk(Mab * m, int size)
 {
 	int block_size = blockSizeNeeded(size);
-	MabPtr valid = NULL;
+	Mab * valid = NULL;
 
 	/* Return current block if size is already correct,
 	 * or if children have been spawned. The fact that
@@ -90,15 +90,54 @@ MabPtr memChk(MabPtr m, int size)
 }
 
 /*************************************************
- * MabPtr memAlloc(MabPtr m, int size):
+ * Mab * memSplit(Mab * m, int size):
+ * 		splits an unused memory block into two equal 
+ * 		left and right children
+ * returns:
+ * 		a pointer to the successfully (original)
+ * 		parent of the two split blocks
+ *
+ * 		NULL if no further split is possible (i.e.
+ * 		if all blocks are fully allocated or if
+ * 		smallest block has been reached)
+ * ***********************************************/
+Mab * memSplit(Mab * m, int size)
+{
+	if (size >= 1 && m->allocated != m->size)
+	{
+		int child_size = m->size/2;
+		Mab *left_child, *right_child;
+		left_child = malloc(sizeof(Mab));
+		right_child = malloc(sizeof(Mab));
+
+		left_child->size = child_size;
+		left_child->allocated = 0;
+		left_child->parent = m;
+		left_child->offset = m->offset;
+
+		right_child->size = child_size;
+		right_child->allocated = 0;
+		right_child->parent = m;
+		right_child->offset = m->offset + child_size;
+
+		m->left = left_child;
+		m->right = right_child;
+
+		return m;
+	}
+	return NULL;
+}
+
+/*************************************************
+ * Mab * memAlloc(Mab * m, int size):
  * 		allocates memory for a process given a size 
  * returns:
- * 		MabPtr to Mab of successfully allocated mem.
+ * 		Mab * to Mab of successfully allocated mem.
  * 		NULL is malloc failed
  * ***********************************************/
-MabPtr memAlloc(MabPtr m, int size)
+Mab * memAlloc(Mab * m, int size)
 {
-	MabPtr needed = memChk(m, size);
+	Mab * needed = memChk(m, size);
 	if (needed)
 	{
 		needed->allocated = blockSizeNeeded(size);
@@ -107,13 +146,13 @@ MabPtr memAlloc(MabPtr m, int size)
 }
 
 /*************************************************
- * MabPtr memFree(MabPtr m):
+ * Mab * memFree(Mab * m):
  * 		frees the memory indicated by the info inside 
  * 		the Mab at m by marking it as free
  * returns:
- * 		MabPtr of the freed block
+ * 		Mab * of the freed block
  * ***********************************************/
-MabPtr memFree(MabPtr m)
+Mab * memFree(Mab * m)
 {
 	if (m)
 	{
@@ -131,11 +170,11 @@ MabPtr memFree(MabPtr m)
 }
 
 /*************************************************
- *	MabPtr memMerge(MabPtr m):
+ *	Mab * memMerge(Mab * m):
  *		merges two unused
  *		blocks back into a larger block
  *	returns:
- *		MabPtr of parent block 
+ *		Mab * of parent block 
  *
  *		NULL if can't go further up the tree,
  *		i.e., current Mab block has a NULL
@@ -147,18 +186,21 @@ MabPtr memFree(MabPtr m)
  *		that it should stop recursing up the
  *		tree
  * ***********************************************/
-MabPtr memMerge(MabPtr m)
+Mab * memMerge(Mab * m)
 {
-	if (!m->parent || !m->parent->left || !m->parent->right)
+	if (!m->parent || !m->parent->left || m->parent->right)
 	{
 		return NULL;
 	}
 
-	MabPtr parent = m->parent;
-	if (parent->left->allocated != 0 || parent->right->allocated != 0)
+	Mab * parent = m->parent;
+	if (parent->left->left || parent->left->right || 	  /* Check that parent's left child has no children */
+			parent->right->left || parent->right->right)  /* Check that parent's right child has no children */
 	{
 		return NULL;
 	}
+
+	// Free allocated memory and mark absence of child nodes
 	free(parent->left);
 	free(parent->right);
 	parent->left = NULL;
@@ -167,56 +209,21 @@ MabPtr memMerge(MabPtr m)
 	return parent;
 }
 
-/*************************************************
- * MabPtr memSplit(MabPtr m, int size):
- * 		splits an unused memory block into two equal 
- * 		left and right children
- * returns:
- * 		a pointer to the successfully (original)
- * 		parent of the two split blocks
- *
- * 		NULL if no further split is possible (i.e.
- * 		if all blocks are fully allocated or if
- * 		smallest block has been reached)
- * ***********************************************/
-MabPtr memSplit(MabPtr m, int size)
-{
-	if (size >= 1 && m->allocated != m->size)
-	{
-		int child_size = m->size/2;
-		MabPtr left_child, right_child;
-		left_child = malloc(sizeof(Mab));
-		right_child = malloc(sizeof(Mab));
-
-		left_child->size = child_size;
-		left_child->allocated = 0;
-		left_child->parent = m;
-
-		right_child->size = child_size;
-		right_child->allocated = 0;
-		right_child->parent = m;
-
-		m->left = left_child;
-		m->right = right_child;
-
-		return m;
-	}
-	return NULL;
-}
 
 /*************************************************
- * MabPtr createUserMem(void):
+ * Mab * createUserMem(void):
  * 		allocates the main memory block - root 
  * 		node of buddy tree
  * returns:
  * 		pointer to the root buddy node
  * ***********************************************/
-MabPtr createUserMem(void)
+Mab * createUserMem(void)
 {
-	MabPtr user_mem;
+	Mab * user_mem;
 	user_mem = malloc(sizeof(Mab));
 	user_mem->size = MEMORY_SIZE;
 	user_mem->allocated = 0;
+	user_mem->offset = 0;
 	user_mem->left = NULL;
 	user_mem->right = NULL;
 	user_mem->parent = NULL;
@@ -224,18 +231,19 @@ MabPtr createUserMem(void)
 }
 
 /*************************************************
- * MabPtr createRTMem(void):
+ * Mab * createRTMem(void):
  * 		allocates the realtime memory block - root
  * 		node of buddy tree
  * returns:
  * 		pointer to the root buddy node
  * ***********************************************/
-MabPtr createRTMem(void)
+Mab * createRTMem(void)
 {
-	MabPtr rt_mem;
+	Mab * rt_mem;
 	rt_mem = malloc(sizeof(Mab));
 	rt_mem->size = RT_MEMORY_SIZE;
 	rt_mem->allocated = 0;
+	rt_mem->offset = 0;
 	rt_mem->left = NULL;
 	rt_mem->right = NULL;
 	rt_mem->parent = NULL;
@@ -243,14 +251,18 @@ MabPtr createRTMem(void)
 }
 
 /*************************************************
- * void printBuddyTree(MabPtr m)
+ * void printBuddyTree(Mab * m)
  * 		takes the root node of a buddy tree and
  * 		prints all the memory allocated at all nodes
  * ***********************************************/
-void printBuddyTree(MabPtr m)
+void printBuddyTree(Mab * m)
 {
-	if (m && m->left)
+	if (m->left && m->right)
+	{
+		printf("[%d]%d/%d [%d]%d/%d\n", 
+				m->left->offset, m->left->allocated, m->left->size, 
+				m->right->offset, m->right->allocated, m->right->size); 
 		printBuddyTree(m->left);
-	if (m && m->right)
 		printBuddyTree(m->right);
+	}
 }

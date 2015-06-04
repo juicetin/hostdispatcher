@@ -29,12 +29,13 @@ struct rsrc {
 };
 
 typedef struct rsrc Rsrc;
+
 typedef Rsrc * RsrcPtr;
 
 /* resuorce management prototypes *****************************/
-RsrcPtr rsrcChk(RsrcPtr, Rsrc);
-RsrcPtr rsrcAlloc(RsrcPtr, Rsrc);
-RsrcPtr rsrcFree(RsrcPtr, Rsrc);
-RsrcPtr createRsrcs(void);
+Rsrc * rsrcChk(Rsrc *, Rsrc);
+Rsrc * rsrcAlloc(Rsrc *, Rsrc);
+Rsrc * rsrcFree(Rsrc *, Rsrc);
+Rsrc * createRsrcs(void);
 
 #endif

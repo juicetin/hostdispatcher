@@ -143,15 +143,20 @@ PcbPtr terminatePcb(PcbPtr p) {
  ******************************************************/
 PcbPtr printPcb(PcbPtr p, FILE * iostream) {
 	/* FILL IN THIS BLOCK WITH YOUR CODE */
-	//	fprintf(iostream, "arrivaltime: %d\n", p->arrivaltime);
-	//	fprintf(iostream, "priority: %d\n", p->priority);
-	//	fprintf(iostream, "remainingcputime: %d\n", p->remainingcputime);
-	//	fprintf(iostream, "mbytes: %d\n", p->mbytes);
-	//	fprintf(iostream, "status: %d\n", p->status);
-
-	fprintf(iostream, "%-12d\t%-8d\t%-18d\t%-6d\t%-6d\t%-8d\t%-8d\t%-6d\t%-3d\n", 
-			p->arrivaltime, p->priority, p->remainingcputime,
-			p->mbytes, p->status, p->req.printers, p->req.scanners, p->req.modems, p->req.cds);
+	//fprintf(iostream, "%-12d\t%-8d\t%-18d\t%-6d\t%-6d\t%-8d\t%-8d\t%-6d\t%-3d\n", 
+	//		p->arrivaltime, p->priority, p->remainingcputime,
+	//		p->mbytes, p->status, p->req.printers, p->req.scanners, p->req.modems, p->req.cds);
+	fprintf(iostream, "%-12d\t", p->arrivaltime);
+	fprintf(iostream, "%-8d\t", p->priority);
+	fprintf(iostream, "%-18d\t", p->remainingcputime);
+	fprintf(iostream, "%-6d\t", p->mbytes);
+	fprintf(iostream, "%-6d\t", p->mab_block->offset);
+	fprintf(iostream, "%-6d\t", p->status);
+	fprintf(iostream, "%-8d\t", p->req.printers);
+	fprintf(iostream, "%-8d\t", p->req.scanners);
+	fprintf(iostream, "%-6d\t", p->req.modems);
+	fprintf(iostream, "%-3d\t", p->req.cds);
+	fprintf(iostream, "\n");
 	return p;
 }
 
@@ -161,7 +166,18 @@ PcbPtr printPcb(PcbPtr p, FILE * iostream) {
  *    void
  ******************************************************/  
 void printPcbHdr(FILE * iostream) {  
-	fprintf(iostream, "arrivaltime	priority	remainingcputime	mbytes	status	printers	scanners	modems	cds\n");
+	//fprintf(iostream, "arrivaltime	priority	remainingcputime	mbytes	status	printers	scanners	modems	cds\n");
+	fprintf(iostream, "arrivaltime\t");
+	fprintf(iostream, "priority\t");
+	fprintf(iostream, "remainingcputime\t");
+	fprintf(iostream, "mbytes\t");
+	fprintf(iostream, "offset\t");
+	fprintf(iostream, "status\t");
+	fprintf(iostream, "printers\t");
+	fprintf(iostream, "scanners\t");
+	fprintf(iostream, "modems\t");
+	fprintf(iostream, "cds\t");
+	fprintf(iostream, "\n");
 	/* FILL IN THIS LINE WITH YOUR CODE */
 }
 

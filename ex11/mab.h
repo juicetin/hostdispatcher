@@ -29,6 +29,7 @@ struct mab
 };
 
 typedef struct mab Mab;
+
 typedef Mab * MabPtr;
 
 int blockSizeNeeded(int size);				//Get smallest power of 2 larger than memory requirement
@@ -36,17 +37,17 @@ int blockSizeNeeded(int size);				//Get smallest power of 2 larger than memory r
 
 /* memory management function prototypes ********/
 
-MabPtr memChk(MabPtr m, int size);		// check if memory available
-MabPtr memAlloc(MabPtr m, int size);	// allocate memory block
-MabPtr memFree(MabPtr m);							// free memory block
+Mab * memChk(Mab * m, int size);		// check if memory available
+Mab * memAlloc(Mab * m, int size);	// allocate memory block
+Mab * memFree(Mab * m);							// free memory block
 
-MabPtr memMerge(MabPtr m);						// merge two memory blocks
-MabPtr memSplit(MabPtr m, int size);	// split a memory block
+Mab * memMerge(Mab * m);						// merge two memory blocks
+Mab * memSplit(Mab * m, int size);	// split a memory block
 
-MabPtr createUserMem(void);
+Mab * createUserMem(void);
 
-MabPtr createRTMem(void);
+Mab * createRTMem(void);
 
-void printBuddyTree(MabPtr m);
+void printBuddyTree(Mab * m);
 
 #endif
