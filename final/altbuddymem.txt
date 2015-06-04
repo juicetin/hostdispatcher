@@ -1,0 +1,10 @@
+   Job		Offset
+0_1_1_192	 256
+0_1_3_32	  64
+0_1_1_416	 512
+0_1_3_32	  96
+0_1_1_160	 256 (allocation is delayed by one second)
+0_1_3_128	 128
+7_1_2_108	 256 (occurs seven seconds after dispatcher starts)
+7_1_2_256	 512 “						  “
+7_1_2_80	 384 “						  “
