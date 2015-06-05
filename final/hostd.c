@@ -166,7 +166,7 @@ int main (int argc, char *argv[]) {
 		while (realtimebuffer)
 		{
 			/* Dump real time processes that use invalid amounts of memory or request any resources */
-			if (!checkRTMem(realtimebuffer) || !checkRTRsrcs(realtimebuffer))
+			if (!checkMem(realtimebuffer) || !checkRsrcs(realtimebuffer))
 			{
 				deqPcb(&realtimebuffer);
 				printf("Invalid amount of memory or resources requested for realtime job; rejected\n");
@@ -191,7 +191,7 @@ int main (int argc, char *argv[]) {
 		{
 			/* Dump user processes that request invalid amounts of memory or request invalid resources */
 
-			if (!checkUJMem(userjobqueue) || !checkUJRsrcs(userjobqueue))
+			if (!checkMem(userjobqueue) || !checkRsrcs(userjobqueue))
 			{
 				printf("Invalid amount of memory or resources requested for user job; rejected\n");
 				deqPcb(&userjobqueue);

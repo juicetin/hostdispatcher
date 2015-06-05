@@ -1,6 +1,12 @@
 \documentclass[11pt]{article}
 \usepackage[margin=0.5in]{geometry}
 \usepackage{comment}
+\usepackage{mathtools}
+\usepackage{parskip}
+
+\def\sp#1{\textsuperscript{#1}}
+\def\sb#1{\textsubscript{#1}}
+\parindent
 
 \title {COMP3520 Host Dispatcher Design Document}
 \author {Justin Ting, jtin2945, 430203826}
@@ -10,6 +16,7 @@
 
 \maketitle
 
+\pagebreak
 \section{Memory Allocation Algorithm}
 
 \iffalse
@@ -20,7 +27,7 @@ a. Describe and discuss what memory allocation algorithms you could have used
 and justify your final design choice
 \fi
 
-A number of memory allocation algorithms were available to choose from for this assignment, and each one will be detailed below - with a description of what they do, their advantages and disadvantages, a worked example that will be consistent across each algorithm, as well as, where applicable, real world cases where they have been used before and how they held up in these situations.\\
+A number of memory allocation algorithms were available to choose from for this assignment, and each one will be detailed below - with a description of what they do, their advantages and disadvantages, and a worked example that will be consistent across each algorithm, using the specific version of the algorithm detailed in each subsection.\\
 
 The algorithms that were allowed to be chosen from were First Fit, Worst Fit, Next Fit, Best Fit, and the Buddy System, all of which at least partially fall under the category of `Dynamic Partioning` (the latter being in a sense a `combination` of fixed and dynamic partioning), in contrast to `Fixed Partioning`. The former allows a variable number of partitions as well as their sizes, while the latter has both a fixed number of partitions as well as their sizes (although fixed sizes does not necessarily indicate fixed \textit{equal} sizes - unequal fixed sizes also still fit the category as well).\\
 
@@ -32,27 +39,34 @@ For our available class of algorithms, they share a number of properties which f
 The following algorithms are named based on the way in which they allocate memory to incoming programs' requests.
 
 \subsection{Best Fit}
-The \textbf{Best Fit} memory allocation algorithm, as the name suggests, will find the smallest block available that is able to fit the request which it is given, starting from the beginning. This means that each search for an appropriate block is of O(n) complexity, as an entire memory block must be traversed to determine the best-fitting block. This algorithm performs dismally, as always finding the best block means that the resulting \textit{size} of unused space (external fragmentation) is minimised - the wording of which can lead one to incorrectly believe is a positive thing, but in fact, rapidly creates a large number of miniscule, unusable blocks of memory, requiring compaction, which, as described above, is an expensive process which we want to minimise - while the Best Fit algorithm essentially maximises it instead. As a result, the best fit algorithm is in fact the worst performer of the pure dynamic allocation algorithms.\\
+The \textbf{Best Fit} memory allocation algorithm, as the name suggests, will find the smallest block available that is able to fit the request which it is given, starting from the beginning. This means that each search for an appropriate block is of $O(n)$ complexity, as an entire memory block must be traversed to determine the best-fitting block. This algorithm performs dismally, as always finding the best block means that the resulting \textit{size} of unused space (external fragmentation) is minimised - the wording of which can lead one to incorrectly believe is a positive thing, but in fact, rapidly creates a large number of miniscule, unusable blocks of memory, requiring compaction, which, as described above, is an expensive process which we want to minimise - while the Best Fit algorithm essentially maximises it instead. As a result, the best fit algorithm is in fact the worst performer of the pure dynamic allocation algorithms.\\
 
 \textbf{However}, it is worth noting that despite its theoretical worst performance, this worst-case behaviour is often not observed, and when these cases do not surface simply due to the nature of the programs making requests to a block of memory, it doesn't necessarily perform worse than some of the other dynamic memory allocation algorithms. While some sources will find this point contentious, some (and possibly a majority) will actually claim that research has shown that Best Fit and First Fit aren't actually superior to each other in terms of wasted memory (though the latter holds) 
 
 \subsection{Next Fit}
-The \textbf{Next Fit} memory allocation algorithm will remember the last spot in which memory was last allocated (naturally, this will be the beginning if any memory is yet to be allocated), and serve requests by finding the next available block that is sufficiently large - taking O(n) time. Under normal operation, this means that what usually happens is the largest block at the `end` of memory will be quickly fragmented as processes are finishing and their allocated memory freed, and new processes with different requirements take their place. This points to a relatively frequent need to compact memory, though less so than the theoretical worst case that the Best Fit algorithm requires.
+The \textbf{Next Fit} memory allocation algorithm will remember the last spot in which memory was last allocated (naturally, this will be the beginning if any memory is yet to be allocated), and serve requests by finding the next available block that is sufficiently large - taking $O(n)$ time. Under normal operation, this means that what usually happens is the largest block at the `end` of memory will be quickly fragmented as processes are finishing and their allocated memory freed, and new processes with different requirements take their place. This points to a relatively frequent need to compact memory, though less so than the theoretical worst case that the Best Fit algorithm requires.
 
 \subsection{First Fit}
-The \textbf{First Fit} memory allocation algorithm search from the beginning of a memory block to find the first block that is sufficiently large to satisfy the request being made. This traversal has a complexity of O(n). Due to searching from the start every time, it takes longer than Next Fit to require breaking up blocks in the later areas of memory, which also means that theoretically, fragmentation will occur slower and hence compaction doesn't have to happen as frequently, reducing the overhead of the algorithm in this regard. However, though it holds the same complexity as Next Fit for each search, the \textit{actual} time to search is slightly higher as it has to check from the start each time, rather than simply the remaining memory left from the last allocated location. This means that during operation when not in the process of compacting, the First Fit algorithm is slower than the Next Fit algorithm. 
+The \textbf{First Fit} memory allocation algorithm search from the beginning of a memory block to find the first block that is sufficiently large to satisfy the request being made. This traversal has a complexity of $O(n)$. Due to searching from the start every time, it takes longer than Next Fit to require breaking up blocks in the later areas of memory, which also means that theoretically, fragmentation will occur slower and hence compaction doesn't have to happen as frequently, reducing the overhead of the algorithm in this regard. However, though it holds the same complexity as Next Fit for each search, the \textit{actual} time to search is slightly higher as it has to check from the start each time, rather than simply the remaining memory left from the last allocated location. This means that during operation when not in the process of compacting, the First Fit algorithm is slower than the Next Fit algorithm. 
 
 \subsection{Worst Fit}
-The \textbf{Worst Fit} memory allocation algorithm will search from the beginning of a full memory block and find the block that is largest in difference to the request actually being made - hence it being named `worst fit`, and takes O(n) time per search. Due to the requirement from searching the entire memory space each time a request is made, its speed during operation is the same speed as that of Best Fit. \iffalse REFERENCE D. Samanta. `Classic Data Structures` 2004. p. 76\fi However, its major difference to the Best Fit algorithm is that rather than trying to minimise `wasted` space, i.e. maximise small, fragmented blocks, it does the reverse - in place of the theoretical `small, unusable` blocks created by Best Fit, Worst Fit will instead have the largest block remaining possible, leaving them available for later processes that make larger requests for available memory/.
+The \textbf{Worst Fit} memory allocation algorithm will search from the beginning of a full memory block and find the block that is largest in difference to the request actually being made - hence it being named `worst fit`, and takes $O(n)$ time per search. Due to the requirement from searching the entire memory space each time a request is made, its speed during operation is the same speed as that of Best Fit.\footnote{D. Samanta. `Classic Data Structures` 2004. p. 76} However, its major difference to the Best Fit algorithm is that rather than trying to minimise `wasted` space, i.e. maximise small, fragmented blocks, it does the reverse - in place of the theoretical `small, unusable` blocks created by Best Fit, Worst Fit will instead have the largest block remaining possible, leaving them available for later processes that make larger requests for available memory.
 
 \subsection{Buddy System}
-The \textbf{Buddy System} memory allocation algorithm differs from the above in that is neither purely uses fixed or dynamic partioning schemes, but rather, a sort of combination of both.   
+The \textbf{Buddy System} memory allocation algorithm differs from the above in that it neither purely uses fixed or dynamic partioning schemes, but rather, a sort of combination of both. This is due to its aim to circumvent the inherent negative aspects of both - to avoid limitation of the number of processes and potential inefficient use of memory of fixed schemes, and the constant need for compaction and its computational cost of dynamic allocation schemes.\\
 
-\iffalse (UNIX uses a version of this) Firefox uses jemalloc - an implementation of Buddy, first appeared in FreeBSD
-http://stackoverflow.com/questions/1624726/how-does-jemalloc-work-what-are-the-benefits\fi
+The buddy system assumes that the total size of available memory is $2^{U}$, where U is a positive integer. To obtain a block of memory to serve a program's request, the smallest block that is greater than or equal to the request size that is also $2^{k}$ where k is a positive integer is allocated. This block is retrieved by taking the full $2^{U}$ block, and spawning two children of size $2^{U-1}$, each of which spawn children of $2^{U-2}$, etc...until the correctly size block is found, at which point it is given to the program requesting it. It is apparent that this represents a binary tree - which is one of the data structures in which the Buddy System can be represented by. Hence, the complexity of allocation and freeing of memory is $log(n)$, a considerable increase in speed over the previous dynamic allocation methods detailed.\\
+
+In its unadulterated form, the reader would be correct in observing one critical flaw with the buddy system - that it further exaggerates the problem of internal fragmentation, arguably beyond that of any reasonably designed fixed partitioning scheme - if we were to start with a 4096MB block of memory, and a program requests 2049MB, that would render the entire block in use, leaving 2047MB empty, yet unusable. This can be remedied through the use of slab allocation - a concept beyond the scope of the course.\\
+
+\subsection{Algorithm Selected}
+The algorithm that was selected for implementation in the assignment was the \textbf{Buddy System}. The reasons for this were both its superior speed when allocating, in comparison to the previous dynamic partitioning schemes, and eliminating the issues of external fragmentation, although it instead has issues of internal fragmentation - which can be fixed by other means. In the context of the assignment, however, this fact can be overlooked (or, more accurately, slab allocation does not need to be implemented) - and it is enough to identify that a solution exists for it. The other major advantage of choosing Buddy is that it is computationally cheaper to free memory - and seeing as the assignment specification says up to 1000 jobs can be in a particular instance, the constant freeing of jobs would impact performance (although not in a way that the user would notice given the nature of the application and the way jobs are `assigned`).\\
+
+Upon further investigation, it can also be seen that many real-world systems even today use the Buddy System at least in part, in their memory allocation schemes. For example, the open source library \textit{jemalloc} uses the buddy system\footnote{people.freebsd.org/~jasone/jemalloc/bsdcan2006/jemalloc.pdf}, and is used in very well known projects today, such as the Firefox browser for managing fragmentation during its use on Windows platforms\footnote{https://github.com/jemalloc/jemalloc/wiki/History}, as well as the FreeBSD OS.
 
 \iffalse (Justification of choice - identifies memory allocation algorithm used in code and clearly justifies choice in context of assignment - 2 marks) \fi
 
+\pagebreak
 \section{Queuing, Dispatching, Memory Allocation, and Resource Allocation Structures}
 
 \iffalse
@@ -60,9 +74,31 @@ http://stackoverflow.com/questions/1624726/how-does-jemalloc-work-what-are-the-b
 
 b. Describe and discuss the structures used by the dispatcher for queuing,
 dispatching and allocating memory and other resources.
+
+structs, linked lists, [trg]
 \fi
 
+All the structures that were used in the implementation of the host dispatcher, including both the main program and the modules which it relied on, comprise of \textit{structs}, \textit{singly linked lists} which were used as queues in all instances where they appeared, \textit{arrays}, and \textit{binary trees}.
 
+\subsection{Queueing and dispatching processes}
+\textit{C structs} were used for a Process Control Block(\textit{Pcb}) which held the data for processes, containing their process ID, arguments (for the default `process` process that simply prints incremental `ticks` at a rate of 1/sec), arrival time, priority, remainingcputime, (psuedo) memory required in MB, a C struct containing resource requirements, status, a pointer to a C struct containing memory block information, and a pointer to the next \textit{Pcb}.\\
+
+To actually queue and dispatch these processes (represented using Pcb's holding process info), singly lniked lists were used, as we only ever needed to take Pcb's from the front of queues, never in the middle of one or from the end. A Realtime Queue linked list was used to hold real time processes, an array of Feedback Queues were used to hold the feedback queues, with its indices offset by one compared to each job's actual priority (priority 1 jobs were in the feedback queue at index 0 in the array, priority 2 at index 1, priority 3 at index 2).\\
+
+\subsection{Allocating memory}
+As mentioned in \textit{Queueing and dispatching processes}, C structs were used to hold information pertaining to memory blocks (Memory Allocation Blocks, or Mabs) - i.e., their offset in main memory, the block's size, amount allocated (though this does not include memory allocated in any children blocks). Because the Buddy System was used for managing memory, a binary tree was the data structure of choice to maintain the available memory - and hence, each Mab also contains a pointer to its pointer Mab, as well as its left and right child Mabs, where they existed. Two binary trees were maintained - one for user jobs, and one for realtime jobs. 
+
+\subsection{Allocating resources}
+Once again, as mentioned in \textit{Queueing and dispatching processes}, C structs were used to hold information regarding required resources for a particular Pcb - i.e., the printers, scanners, modems, and cds it needed. While each Pcb contains a resource struct to keep track of the number of resources required, one more Resource struct existed in the main program to keep track of the available resources in the overall system at any one time.
+
+\subsection{Appropriateness}
+Due to C being a non-object oriented language, these were the best structures to use given the problem at hand. Queues are explicitly stated in the assignment spec, and hence queues were needed - implemented as singly linked lists. The only way to hold blocks of information together in C is using structs, hence their use for multiple parts of the program. The very nature of the Buddy System points towards it using a binary tree, which was why that was also used - and many sources verify this too, not the least of which includes the Art of Programming Volume 1.\footnote{D. Knuth. `The Art Of Programming: Volume 1 Fundamental Algorithms, Third Edition` 2013. p. 650 (ebook Edition)}\\
+
+Some alternatives do exist to the structures used. On a more detailed level, while the implementation that this Design Document described used nested structs, all the information from each struct could have been instead all compressed into the one struct - in this way, memory would have been allocated marginally more contiguously, but this difference would have been so minor that it would be more advantageous for the sake of code clarity to separate information into appropriate C structs.\\
+
+On a more fundamental level, the problem at hand would have lended itself nicely to the use of classes in C++ as well - something which could have been emulated in a bastardised form of C, by containing the functions relating to the purpose of each struct with the use of function pointers. However, this goes against common usage of C, as well as arguably violating using `straight` C, as the assignment required.
+
+\pagebreak
 \section{Program Structure}
 
 \iffalse
@@ -75,8 +111,74 @@ various modules and major functions (description of the function interfaces are
 expected)
 \fi
 
+\subsection{Overall Program Structure}
+The overall program structure of the Host Dispatcher utilises three modules - that of the Process Control Block, the Memory Allocation Block, and Resource block modules. This results in the code base in its entirety representing a modular, logical structure, accurately breaking down the problem into its constituents in terms of each individual module. By structuring the code around the inherent structure of the problem itself, it makes it easier to understand at first glance, as well as to modify when parts of the host dispatcher (or program in general) needs to be modified or extended. This may not be as apparent when looking at this assignment in isolation, but for arugment's sake, if there were subsequent assignments where we received other students' code and were required to perform major extensions on it, well-implemented modularity would make it a much less daunting task. As a better (and more real-world relevant) example, perhaps a much larger program needs to incorporate this relatively miniscule project into it - and if it needed to use indiviual elements of it, the programmer could look directly to the appropriate module, rather than digging through a single, large file, which would likely be a monolithic, unorganised mess.\\
+
+The main program contains several key elements:
+\begin{itemize}
+\item An \textbf{inputqueue}, which takes in all jobs from an input text file
+\item A \textbf{userjobqueue}, which holds all user jobs from the inputqueue
+\item An \textit{array of pointers} to \textbf{feedback queues}, containing jobs from the userjobqueue that have been supplied the sufficient amount of memory and resources they require
+\item A \textbf{realtimebuffer}, which contains all real tmie jobs from the inputqueue
+\item A \textbf{realtimequeue}, which contains jobs from the realtimebuffer that have been given enough memory to run
+\end{itemize}
+
+And without getting into any code or even too deep into specifics, the general flow of the program is as follows (note that the following list is not intended to act as instructions to follow to be able to implement the problem at hand to completion and perfection - but rather, to get a concise idea of how the problem was approached - hence, it is missing implementation specific details such as reading in files, specific error handling, actual flow logic, etc.). Steps $2$ and $3$ represent the Real Time Dispatcher module, while steps $4$ and $5$ represent the Feedback Dispatcher module.
+\begin{enumerate}
+\item Place all jobs from the inputqueue into the userjobqueue and realtimebuffers respectively
+\item Allocate memory to jobs at the front of the realtimebuffer as long as it is available
+\item Run all jobs in the realtimequeue from beginning to end until completion (hence skipping the following steps until such time is reached)
+\item Allocate memory and resources to jobs in the userjobqueue as they become available, and enter it in the appropriate feedback queue (array) based on the specified priority
+\item Run the process at the front of the highest priority feedback queue for one quanta, before placing it at the end of the next lower priority feedback queue
+\end{enumerate}
+
+The following subsections will detail each individual module and its major functions, and by doing so the way each one ties into the functionality of the program as a whole will become apparent. Note that trivial helper functions have been excluded, as they provide no useful insight into how the program functions, even to someone looking to utilise the program as a whole needing to understand roughly how everything operates and weaves together. Unlike the previous paragraph, however, considerable detail will be given with regards to each modules' functions, as they are the foundation of the main program.
+
+\subsection{Process Control Block (pcb) Module}
+\textbf{startPcb}\\
+This function takes a Pcb pointer and checks the process' status - it will then either start an unstarted process using C's \textit{fork} and \textit{exec} functinos, or continue a paused one with a \textit{SIGCONT} signal- and this is done by checking the process ID (which is stored in a Pcb's struct) - a zero ID indicates a new process, while a non-zero one indicates it already exists but has simply been paused by a \textit{SIGTSTP} signal. The function's return value indicates whether it carried out its operation successfully - a vaild pointer indicates success, while a \textit{NULL} pointer means that the start/restart operation it attempted failed. This function gets called whenever a process is first being executed from a feedback queue, or being resume from a paused state. As such, there is no `resumePcb` function, as the reader may have observed.\\
+
+\textbf{suspendPcb}\\
+This function takes a Pcb pointer and sends the process it stores a \textit{SIGTSTP} signal, causing it to pause. The function will similarly return a NULL pointer if the signal fails. This function is called only on jobs in feedback queues, each time it has executed for one quanta.\\
+
+\textbf{terminatePcb}\\
+This function takes a Pcb pointer and sends the process it stores a \textit{SIGINT} signal, causing it to die. It is only called when a program's remainingcputime has reached zero.\\
+
+\textbf{enqPcb}\\
+This function takes a pointer to the head of a queue (specifically, a Pcb), and a Pcb pointer to the process block that is to be queued. The head of the existing queue will be stored in a temporary variable, and then modified to point at the back of the queue, allowing the last item in the queue to then be pointed at the target Pcb to be enqueued. The \textit{head} of this new queue is then returned, or in the case where a queue is yet to be created, simply the \textit{process} to be enqueued is returned instead - as it is the head of this newly created queue. This function is called whenever Pcbs need to be enqueued - whether it is into the userjobqueue, from this to the realtimebuffer/userjobqueue, to the realtimequeue/feedbackqueues respectively, or from one feedbackqueue to another.\\
+
+\textbf{deqPcb}\\
+This function takes a double pointer to the head of a queue (specifically, a Pcb), and takes the frontmost item off the queue by assigning a temporary pointer to the current head, and then pointing the head to the next item (in this case, the next of the temporary Pcb pointer). Hence, the new head after dequeuing will be returned if successful, or NULL returned if unsuccessful, when a queue is already empty. With the exception of when the inputqueue is being loaded with data from an external text file, deqPcb will always be called in pairs with enqPcb - a Pcb is only enqueued onto one queue after being dequeued from another.\\
+
+\textbf{checkRsrcs}\\
+This function takes a pointer to a Pcb and checks whether it requests valid resources. The role of this function is twofold, as it checks for both realtime and user jobs. It returns true for the former only if no resources are requested, whereas it returns true for the latter so long as the requested amount doesn't exceed the system's total available resources (not simply the amount available at the time - that allocation is handled in the main program). This function is called whenever a process is trying to obtain resources in order to be queued to run.
+\\
+
+\textbf{checkMem}\\
+This function takes a pointer to a Pcb and checks whether it requests valid memory. The role of this function is similarly twofold, as it checks for both realtime and user jobs. It returns true for the former when memory requested doesn't exceed 64mb, whereas it returns true for the latter so long as it doesn't return more than half the available size. This seemingly abnormal restriction is because of the naive implementation of the Buddy System, and reserved memory for realtime jobs - the largest available block for a system with 1024MB memory using this implementation of the Buddy System is only 512MB. This function is called whenever processes are trying to reserve a block of memory in order to be queued to run.\\
+
+At this point, multiple justifications are in order regarding some of the design choices made above. 
+\begin{itemize}
+\item The check functions do not simultaneously allocate memory/resources if they are available. This is necessary, as both resources and memory must be available at any point in time before they are allocated - if each pre-allocates them within their isolated functions, we will end up with cases where one allocates memory/resources and the other doesn't because it wasn't able to - resulting in either a bug, or extra code to do otherwise unnecessary freeing if both conditions are satisfied at once
+\item This point must may have occurred to the reader as soon as they happened upon the check functions - why are resource and memory checks not in the resource and memory modules? This is justified and even preferred, because first of all - they should take pointers to Pcbs and not Rsrc/Mab blocks specifically, as the programmer using these interfaces should not have to worry about such specifics. Secondly, given the previous assertion, we can't place the functions in the memory/resource modules as circular dependencies would arise as a result
+
+\subsection{Memory Allocation Block (mab) Module}
+
+
+\subsection{Resource Block (rsrc) Module}
+
+
+
+\pagebreak
 \section{Discussion - Use of Multilevel Dispatching Scheme}
 
+The feedback queue component of the task utilises a multi-level dispatching scheme. These are important for process management because they allow the prioritising of different types of processes requiring different resources (e.g. CPU bound or I/O bound) to be adequately intricate such that throughput and performance are maximised. In recent times (though not technologically speaking), Windows NT was one particular system that utilised such a scheme. This ties in with one key weakness of the algorithm being used in the task at hand - equal quanta are assigned to CPU-bound tasks are they are to those requiring I/O operations - but because by their nature, I/O tasks are more expensive and time consuming, it is possible that quite often they only ever use part of their quanta, sacrificing the rest without ever getting it back, which inadvertently favours CPU-bound tasks over I/O-bound ones. One possible solution to this is the one which Windows NT employed - by adjusting priorities (naturally, priorities in a real operating system are likely to be more fine-grained then the coarse 3-level one used in our dispatcher) based on whether a process favoured I/O or CPU intensive tasks, and gave higher priority to the former.\footnote{"A Tale of Two Schedulers Windows NT and Windows CE", http://web.archive.org/web/20120722015555/http://sriramk.com/schedulers.html}\\
+
+This is not the only solution to the problem, however - rather than simply assigning higher priority to I/O bound processes to try and balance the scales in terms of time given to processes, which would involve estimating how long certain I/O operations would take relative to their CPU counterparts before adjusting priorities accordingly which would provide them even time, a rather complex calculation, there exists a simpler alternative. This would be to actually take the time spent by an I/O-bound process after the fact, and then take the leftover time, i.e. subtracting the time spent by the process from the quanta that was actually available to it, and storing that value for that particular process. The I/O-bound process, if it hadn't used up its quanta, is then placed on a special queue for I/O-bound processes which are allowed to execute for a period equal to the sum of time equal to its leftover each time a quanta wasn't fully utilised. This scheme is also utilised in real-world systems - one particular example being Solaris.\footnote{pages.cs.wisc.edu/.../solaris-notes.pdf}.\\
+
+Both Window NT and Solaris present viable solutions to problems which are very much inherent in our implementation of a multilevel dispatcheing scheme - that being that we don't intentionally discriminate between I/O-bound and CPU-bound processes, and as such the natural CPU-bound skew will arise, causing potential starvation for I/O-bound processes. This only accounts for one flaw in our scheme - an even larger, more critical problem, arguably, is the high possibility of starvation in our naive implementation. In our three-level dispatcher queue, once a process has reached priority level three, it stays there with no way to increase its priority - this means that if a constant stream of processes request resources that are available (likely to be low resource-requirement with low total execution times), processes that drop to the lowest priority will never get serviced. While the previous issue addressed starvation of I/O-bound processes specifically, we have now identified that our model also has the issue of starvation of processes in general.\\
+
+The most obvious solution to this issue is the use of aging - which observes the age of a process within its particular level in a multilevel feedback queue, and based on metrics defined by the designer of the system, can raise the priority of a process depending on its age within a particular queue, to prevent starvation. Depending on how old it is, it could be raised by $k$ priorities, proportional to its age. While the current implementation doesn't lend itself perfectly to this solution, the fix to do so is an easy one. Because the realtimequeue is currently separate from the array of feedback queues, and the structure of the main program unquestioningly gives absolute priority to jobs in the realtimequeue, raising priorities of user jobs 
 
 \iffalse
 (20 marks + 5 bonus)

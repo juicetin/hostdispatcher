@@ -112,11 +112,6 @@ PcbPtr suspendPcb(PcbPtr p) {
 	return NULL;
 }
 
-PcbPtr resumePcb(PcbPtr p) {
-	kill(p->pid, SIGCONT);
-	return p;
-}
-
 /*******************************************************
  * PcbPtr terminatePcb(PcbPtr process) - terminate
  *    a process

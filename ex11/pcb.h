@@ -90,7 +90,6 @@ typedef Pcb * PcbPtr;
 
 Pcb * startPcb(Pcb *);
 Pcb * suspendPcb(Pcb *);
-Pcb * resumePcb(Pcb *);
 Pcb * terminatePcb(Pcb *);
 Pcb * printPcb(Pcb *, FILE *);
 void   printPcbHdr(FILE *);

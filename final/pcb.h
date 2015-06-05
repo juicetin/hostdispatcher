@@ -98,10 +98,7 @@ Pcb * createnullPcb();
 Pcb * enqPcb(Pcb *, Pcb *);
 Pcb * deqPcb(Pcb **);
 
-bool checkRTRsrcs(Pcb * block);
-bool checkUJRsrcs(Pcb * block);
-
-bool checkRTMem(Pcb * block);
-bool checkUJMem(Pcb * block);
+bool checkRsrcs(Pcb *block);
+bool checkMem(Pcb *block);
 
 #endif

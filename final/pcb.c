@@ -9,46 +9,46 @@ Tutorial Time: Monday 10am
 
   OS Eercises - Project 2 - HOST dispatcher
 
-  pcb - process control block functions for HOST dispatcher
+pcb - process control block functions for HOST dispatcher
 
-  PcbPtr startPcb(PcbPtr process) - start (or restart) a process
+Pcb * startPcb(Pcb * process) - start (or restart) a process
 returns:
-PcbPtr of process
+Pcb * of process
 NULL if start (restart) failed
 
-PcbPtr suspendPcb(PcbPtr process) - suspend a process
+Pcb * suspendPcb(Pcb * process) - suspend a process
 returns:
-PcbPtr of process
+Pcb * of process
 NULL if suspend failed
 
-PcbPtr terminatePcb(PcbPtr process) - terminate a process
+Pcb * terminatePcb(Pcb * process) - terminate a process
 returns:
-PcbPtr of process
+Pcb * of process
 NULL if terminate failed
 
-PcbPtr printPcb(PcbPtr process, FILE * iostream)
+Pcb * printPcb(Pcb * process, FILE * iostream)
 - print process attributes on iostream
 returns:
-PcbPtr of process
+Pcb * of process
 
 void printPcbHdr(FILE *) - print header for printPcb
 returns:
 void
 
-PcbPtr createnullPcb(void) - create inactive Pcb.
+Pcb * createnullPcb(void) - create inactive Pcb.
 returns:
-PcbPtr of newly initialised Pcb
+Pcb * of newly initialised Pcb
 NULL if malloc failed
 
-PcbPtr enqPcb (PcbPtr headofQ, PcbPtr process)
+Pcb * enqPcb (Pcb * headofQ, Pcb * process)
 - queue process (or join queues) at end of queue
 - enqueues at "tail" of queue. 
 returns head of queue
 
-PcbPtr deqPcb (PcbPtr * headofQ);
+Pcb * deqPcb (Pcb * * headofQ);
 - dequeue process - take Pcb from "head" of queue.
 returns:
-PcbPtr if dequeued,
+Pcb * if dequeued,
 NULL if queue was empty
 & sets new head of Q pointer in adrs at 1st arg
 
@@ -63,13 +63,13 @@ author:  Dr Ian G Graham, ian.graham@griffith.edu.au
 #include "pcb.h"
 
 /*******************************************************
- * PcbPtr startPcb(PcbPtr process) - start (or restart)
+ * Pcb * startPcb(Pcb * process) - start (or restart)
  *    a process
  * returns:
- *    PcbPtr of process
+ *    Pcb * of process
  *    NULL if start (restart) failed
  ******************************************************/
-PcbPtr startPcb (PcbPtr p) { 
+Pcb * startPcb (Pcb * p) { 
 	if (p->pid == 0) {                 // not yet started
 		switch (p->pid = fork ()) {    //  so start it
 			case -1: 
@@ -95,13 +95,13 @@ PcbPtr startPcb (PcbPtr p) {
 } 
 
 /*******************************************************
- * PcbPtr suspendPcb(PcbPtr process) - suspend
+ * Pcb * suspendPcb(Pcb * process) - suspend
  *    a process
  * returns:
- *    PcbPtr of process
+ *    Pcb * of process
  *    NULL if suspend failed
  ******************************************************/
-PcbPtr suspendPcb(PcbPtr p) {
+Pcb * suspendPcb(Pcb * p) {
 	/* FILL IN THIS BLOCK WITH YOUR CODE */
 	if (kill(p->pid, SIGTSTP) == 0)
 	{
@@ -112,19 +112,19 @@ PcbPtr suspendPcb(PcbPtr p) {
 	return NULL;
 }
 
-PcbPtr resumePcb(PcbPtr p) {
+Pcb * resumePcb(Pcb * p) {
 	kill(p->pid, SIGCONT);
 	return p;
 }
 
 /*******************************************************
- * PcbPtr terminatePcb(PcbPtr process) - terminate
+ * Pcb * terminatePcb(Pcb * process) - terminate
  *    a process
  * returns:
- *    PcbPtr of process
+ *    Pcb * of process
  *    NULL if terminate failed
  ******************************************************/
-PcbPtr terminatePcb(PcbPtr p) {
+Pcb * terminatePcb(Pcb * p) {
 	/* FILL IN THIS BLOCK WITH YOUR CODE */
 	if (kill(p->pid, SIGINT) == 0)
 	{
@@ -136,12 +136,12 @@ PcbPtr terminatePcb(PcbPtr p) {
 }  
 
 /*******************************************************
- * PcbPtr printPcb(PcbPtr process, FILE * iostream)
+ * Pcb * printPcb(Pcb * process, FILE * iostream)
  *  - print process attributes on iostream
  *  returns:
- *    PcbPtr of process
+ *    Pcb * of process
  ******************************************************/
-PcbPtr printPcb(PcbPtr p, FILE * iostream) {
+Pcb * printPcb(Pcb * p, FILE * iostream) {
 	/* FILL IN THIS BLOCK WITH YOUR CODE */
 	//fprintf(iostream, "%-12d\t%-8d\t%-18d\t%-6d\t%-6d\t%-8d\t%-8d\t%-6d\t%-3d\n", 
 	//		p->arrivaltime, p->priority, p->remainingcputime,
@@ -182,16 +182,16 @@ void printPcbHdr(FILE * iostream) {
 }
 
 /*******************************************************
- * PcbPtr createnullPcb() - create inactive Pcb.
+ * Pcb * createnullPcb() - create inactive Pcb.
  *
  * returns:
- *    PcbPtr of newly initialised Pcb
+ *    Pcb * of newly initialised Pcb
  *    NULL if malloc failed
  ******************************************************/
-PcbPtr createnullPcb() {
-	PcbPtr newprocessPtr;
+Pcb * createnullPcb() {
+	Pcb * newprocessPtr;
 
-	if ((newprocessPtr = (PcbPtr) malloc (sizeof(Pcb)))) {
+	if ((newprocessPtr = (Pcb *) malloc (sizeof(Pcb)))) {
 		newprocessPtr->pid = 0;
 		newprocessPtr->args[0] = DEFAULT_PROCESS;
 		newprocessPtr->args[1] = NULL;
@@ -213,13 +213,13 @@ PcbPtr createnullPcb() {
 }   
 
 /*******************************************************
- * PcbPtr enqPcb (PcbPtr headofQ, PcbPtr process)
+ * Pcb * enqPcb (Pcb * headofQ, Pcb * process)
  *    - queue process (or join queues) at end of queue
  * 
  * returns head of queue
  ******************************************************/
-PcbPtr enqPcb(PcbPtr q, PcbPtr p) {
-	PcbPtr h = q;
+Pcb * enqPcb(Pcb * q, Pcb * p) {
+	Pcb * h = q;
 
 	p->next = NULL; 
 	if (q) {
@@ -230,16 +230,16 @@ PcbPtr enqPcb(PcbPtr q, PcbPtr p) {
 	return p;
 }
 /*******************************************************
- * PcbPtr deqPcb (PcbPtr * headofQ);
+ * Pcb * deqPcb (Pcb ** headofQ);
  *    - dequeue process - take Pcb from head of queue.
  *
  * returns:
- *    PcbPtr if dequeued,
+ *    Pcb * if dequeued,
  *    NULL if queue was empty
  *    & sets new head of Q pointer in adrs at 1st arg
  *******************************************************/
-PcbPtr deqPcb(PcbPtr * hPtr) {
-	PcbPtr p;
+Pcb * deqPcb(Pcb ** hPtr) {
+	Pcb * p;
 
 	if (hPtr && (p = * hPtr)) {
 		* hPtr = p->next;
@@ -248,26 +248,45 @@ PcbPtr deqPcb(PcbPtr * hPtr) {
 	return NULL;
 }
 
-bool checkRTRsrcs(PcbPtr block)
+/*******************************************************
+ *  bool checkRsrcs(Pcb *block)
+ *  	- checks whether there are valid resources being
+ *  	requested
+ *
+ *  returns:
+ *  	true if realtime processes request no resources
+ *  	true if user processes don't request more than
+ *  		the max possible resources
+ *******************************************************/
+bool checkRsrcs(Pcb *block)
 {
-	return block->req.printers == 0 && block->req.scanners == 0 && 
-		block->req.modems == 0 && block->req.cds == 0;
-}
-
-bool checkUJRsrcs(PcbPtr block)
-{
+	//If the block belongs to a real time process
+	if (block->priority == 0)
+	{
+		return block->req.printers == 0 && block->req.scanners == 0 && 
+			block->req.modems == 0 && block->req.cds == 0;
+	}
+	//If the block belongs to a user process
 	return block->req.printers >= 0 && block->req.printers <= PRINTERS &&
-		   block->req.scanners >= 0 && block->req.scanners <= SCANNERS &&
-		   block->req.modems >= 0 && block->req.modems <= MODEMS &&
-		   block->req.cds >= 0 && block->req.cds <= CDS;
+		block->req.scanners >= 0 && block->req.scanners <= SCANNERS &&
+		block->req.modems >= 0 && block->req.modems <= MODEMS &&
+		block->req.cds >= 0 && block->req.cds <= CDS;
 }
 
-bool checkRTMem(PcbPtr block)
+/*******************************************************
+ *  bool checkMem(Pcb *block)
+ *  	- checks whether the memory requested is valid
+ *  returns:
+ *  	true if realtime jobs don't request more than 64mb
+ *  	true if user jobs don't request more than TOTAL/2
+ *  		(due to the Buddy system being in use)
+ *******************************************************/
+bool checkMem(Pcb *block)
 {
-	return block->mbytes >= 0 && block->mbytes <= RT_MEMORY_SIZE;
-}
-
-bool checkUJMem(PcbPtr block)
-{
+	if (block->priority == 0)
+	{
+		return block->mbytes >= 0 && block->mbytes <= RT_MEMORY_SIZE;
+	}
 	return block->mbytes >= 0 && block->mbytes <= MEMORY_SIZE / 2;
 }
+
